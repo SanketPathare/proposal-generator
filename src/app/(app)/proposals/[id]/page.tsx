@@ -221,6 +221,7 @@ export default function ProposalEditorPage() {
         status: status === 'draft' ? 'sent' : status,
         sharedAt: new Date(),
       });
+      await firestoreHelpers.createSharedProposal(shareId, user.uid, proposalId);
       setStatus((prev) => (prev === 'draft' ? 'sent' : prev));
       const link = `${window.location.origin}/shared/${shareId}`;
       setShareLink(link);

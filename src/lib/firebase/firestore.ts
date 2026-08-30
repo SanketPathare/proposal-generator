@@ -283,6 +283,23 @@ export const firestoreHelpers = {
     await deleteDoc(userSubDoc(userId, COLLECTIONS.SAVED_CONTENT, contentId));
   },
 
+  // Shared Proposals (lookup table for share links)
+  async createSharedProposal(shareId: string, userId: string, proposalId: string) {
+    const database = getDb();
+    if (!database) throw new Error('Firestore is not initialized');
+    const ref = doc(database, 'sharedProposals', shareId);
+    await setDoc(ref, toFirestore({ userId, proposalId, createdAt: new Date() }));
+  },
+
+  async getSharedProposal(shareId: string): Promise<{ userId: string; proposalId: string } | null> {
+    const database = getDb();
+    if (!database) throw new Error('Firestore is not initialized');
+    const ref = doc(database, 'sharedProposals', shareId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return snap.data() as { userId: string; proposalId: string };
+  },
+
   // Media
   async saveMediaReference(userId: string, data: Omit<MediaAsset, 'id'>) {
     const ref = doc(userSubCollection(userId, COLLECTIONS.MEDIA));

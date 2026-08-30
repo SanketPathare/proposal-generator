@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Client } from '@/types';
@@ -277,17 +278,17 @@ export default function ClientsPage() {
             <Card key={client.id} hoverEffect className="flex flex-col justify-between overflow-hidden">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/clients/${client.id}`} className="flex items-center gap-3 group/link min-w-0 flex-1">
                     <Avatar fallback={client.name} size="md" />
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-sm text-[#09090b] truncate">{client.name}</h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-sm text-[#09090b] truncate group-hover/link:text-indigo-600 transition-colors">{client.name}</h3>
                       {client.company && (
                         <p className="text-xs text-[#71717a] truncate font-medium flex items-center gap-1">
                           <Building className="h-3 w-3" /> {client.company}
                         </p>
                       )}
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="flex items-center gap-1">
                     <button

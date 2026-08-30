@@ -20,22 +20,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const proposalsRef = db.collectionGroup('proposals');
-    const snapshot = await proposalsRef.where('shareId', '==', shareId).limit(1).get();
+    // Step 1: Look up userId + proposalId from the sharedProposals lookup table
+    const sharedRef = db.collection('sharedProposals').doc(shareId);
+    const sharedSnap = await sharedRef.get();
 
-    if (snapshot.empty) {
+    if (!sharedSnap.exists) {
       return NextResponse.json(
         { error: 'not_found', message: 'Proposal not found or link has expired.' },
         { status: 404 }
       );
     }
 
-    const proposalDoc = snapshot.docs[0];
-    const proposalData = proposalDoc.data();
+    const { userId, proposalId } = sharedSnap.data()!;
+
+    if (!userId || !proposalId) {
+      return NextResponse.json(
+        { error: 'not_found', message: 'Proposal link is invalid.' },
+        { status: 404 }
+      );
+    }
+
+    // Step 2: Read the proposal directly from the user's subcollection
+    const proposalRef = db.collection('users').doc(userId).collection('proposals').doc(proposalId);
+    const proposalSnap = await proposalRef.get();
+
+    if (!proposalSnap.exists) {
+      return NextResponse.json(
+        { error: 'not_found', message: 'Proposal not found or has been removed.' },
+        { status: 404 }
+      );
+    }
+
+    const proposalData = proposalSnap.data()!;
 
     // Update view count and status (non-critical)
     try {
-      await proposalDoc.ref.update({
+      await proposalRef.update({
         viewCount: (proposalData.viewCount || 0) + 1,
         lastViewedAt: new Date(),
         status: proposalData.status === 'sent' ? 'viewed' : proposalData.status,
@@ -47,7 +67,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       proposal: {
         ...proposalData,
-        id: proposalDoc.id,
+        id: proposalSnap.id,
         createdAt: proposalData.createdAt?.toDate?.() || proposalData.createdAt || new Date(),
         updatedAt: proposalData.updatedAt?.toDate?.() || proposalData.updatedAt || new Date(),
         acceptedAt: proposalData.acceptedAt?.toDate?.() || proposalData.acceptedAt || null,

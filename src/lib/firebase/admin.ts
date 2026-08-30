@@ -15,7 +15,11 @@ function initializeAdminApp() {
   } else {
     const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID;
     const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    let rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.trim() || '';
+    if ((rawKey.startsWith('"') && rawKey.endsWith('"')) || (rawKey.startsWith("'") && rawKey.endsWith("'"))) {
+      rawKey = rawKey.slice(1, -1);
+    }
+    const privateKey = rawKey.replace(/\\n/g, '\n');
 
     if (!projectId || !clientEmail || !privateKey) {
       throw new Error('Missing Firebase Admin credentials');
