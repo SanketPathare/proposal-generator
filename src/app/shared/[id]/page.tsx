@@ -96,11 +96,29 @@ export default function SharedProposalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shareId, action: 'accept', clientSignName, clientEmail }),
       });
+      if (proposal) {
+        setProposal({
+          ...proposal,
+          status: 'accepted',
+          clientSignName,
+          clientEmail,
+          acceptedAt: new Date(),
+        });
+      }
       setStatus('accepted');
       setConfirmed(true);
       setAcceptModalOpen(false);
     } catch (err) {
       console.error('Accept error:', err);
+      if (proposal) {
+        setProposal({
+          ...proposal,
+          status: 'accepted',
+          clientSignName,
+          clientEmail,
+          acceptedAt: new Date(),
+        });
+      }
       setStatus('accepted');
       setConfirmed(true);
       setAcceptModalOpen(false);
@@ -223,17 +241,41 @@ export default function SharedProposalPage() {
       {/* Main Document Content — ref used by react-to-print */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         <div ref={printRef} data-print-root className="space-y-8">
-        {/* Confirmed Banner */}
-        {confirmed && (
-          <div className="p-4 sm:p-6 bg-emerald-50 border border-emerald-200 rounded-3xl flex items-center gap-4 text-emerald-800 animate-in fade-in-0 duration-300">
-            <div className="h-10 w-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-              <Check className="h-5 w-5 stroke-[3]" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-sm sm:text-base text-emerald-900">Proposal Officially Accepted!</h3>
-              <p className="text-xs text-emerald-700 mt-0.5">
-                Thank you! Your acceptance has been recorded and the creator has been notified to initiate project onboarding.
-              </p>
+        {/* Confirmed / Accepted Banner */}
+        {(confirmed || status === 'accepted') && (
+          <div className="p-5 sm:p-6 bg-emerald-50 border border-emerald-200 rounded-3xl animate-in fade-in-0 duration-300">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Check className="h-5 w-5 stroke-[3]" />
+              </div>
+              <div className="flex-1 space-y-3">
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-emerald-900">Proposal Officially Accepted & Signed</h3>
+                  <p className="text-xs text-emerald-700 mt-0.5">
+                    This proposal has been digitally signed and accepted. The creator has been notified to initiate project onboarding.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {(clientSignName || proposal?.clientSignName) && (
+                    <div className="bg-white/60 rounded-2xl p-3 border border-emerald-100">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Signed By</p>
+                      <p className="text-sm font-bold text-emerald-900">{clientSignName || proposal?.clientSignName}</p>
+                    </div>
+                  )}
+                  {(clientEmail || proposal?.clientEmail) && (
+                    <div className="bg-white/60 rounded-2xl p-3 border border-emerald-100">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Email</p>
+                      <p className="text-sm font-bold text-emerald-900">{clientEmail || proposal?.clientEmail}</p>
+                    </div>
+                  )}
+                  {(proposal?.acceptedAt) && (
+                    <div className="bg-white/60 rounded-2xl p-3 border border-emerald-100">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Accepted On</p>
+                      <p className="text-sm font-bold text-emerald-900">{formatDate(proposal.acceptedAt)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}

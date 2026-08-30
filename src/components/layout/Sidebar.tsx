@@ -16,12 +16,14 @@ import {
   Sparkles,
   ExternalLink,
   ChevronDown,
+  CheckCircle2,
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My Proposals', href: '/proposals', icon: FileText },
+  { name: 'Accepted & Signed', href: '/accepted', icon: CheckCircle2 },
   {
     name: 'Templates',
     href: '/templates',

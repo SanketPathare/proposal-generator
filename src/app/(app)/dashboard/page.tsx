@@ -127,7 +127,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Stat 3 */}
-        <Card hoverEffect className="p-5 flex flex-col justify-between">
+        <Card hoverEffect className="p-5 flex flex-col justify-between cursor-pointer" onClick={() => router.push('/accepted')}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#71717a]">Accepted Deals</span>
             <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700">
