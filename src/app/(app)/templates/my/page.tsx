@@ -6,8 +6,17 @@ import { useAuth } from '@/context/AuthContext';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Template } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { cn, formatDate, deepClone } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/Card';
+import { formatDate, deepClone } from '@/lib/utils';
+import {
+  Layers,
+  Plus,
+  Copy,
+  Trash2,
+  Edit2,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react';
 
 export default function MyTemplatesPage() {
   const { user } = useAuth();
@@ -27,7 +36,7 @@ export default function MyTemplatesPage() {
     setLoading(true);
     try {
       const data = await firestoreHelpers.getTemplates(user.uid);
-      setTemplates(data);
+      setTemplates(data || []);
     } catch (err) {
       console.error('Failed to load templates:', err);
     } finally {
@@ -67,101 +76,133 @@ export default function MyTemplatesPage() {
     }
   };
 
-  const handleEdit = (templateId: string) => {
-    router.push(`/templates/create?edit=${templateId}`);
+  const handleUseTemplate = async (template: Template) => {
+    if (!user) return;
+    try {
+      const newProposal = await firestoreHelpers.createProposal(user.uid, {
+        clientId: null,
+        title: template.title,
+        purpose: template.description || 'Proposal draft',
+        status: 'draft',
+        templateId: template.id,
+        currency: 'USD',
+        sections: template.sections.map((s) => ({ ...s, id: Math.random().toString(36).substring(2, 9) })),
+        pricing: null,
+        shareId: null,
+        sharedAt: null,
+        expiresAt: null,
+        passwordHash: null,
+        lastViewedAt: null,
+        acceptedAt: null,
+        rejectedAt: null,
+      });
+      router.push(`/proposals/${newProposal.id}`);
+    } catch (err) {
+      console.error('Use custom template error:', err);
+    }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-3 border-[#09090b] border-t-[#d4ff00] animate-spin" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-[#71717a]">Loading Templates...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Templates</h1>
-          <p className="text-gray-500 mt-1">Manage your saved proposal templates.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#09090b] tracking-tight">My Saved Templates</h1>
+          <p className="text-sm text-[#71717a] mt-1">Custom templates saved from your proposals.</p>
         </div>
-        <Button onClick={() => router.push('/templates/create')}>Create Template</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => router.push('/templates/explore')}>
+            Explore Gallery
+          </Button>
+          <Button variant="accent" size="sm" className="font-bold" onClick={() => router.push('/proposals/new')}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            New Proposal
+          </Button>
+        </div>
       </div>
 
       {templates.length === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No templates yet</h3>
-          <p className="mt-1 text-sm text-gray-500">Get started by creating a template or exploring pre-built ones.</p>
+        <div className="text-center py-20 bg-white rounded-3xl border border-[#e4e4e7] p-8">
+          <div className="h-14 w-14 rounded-2xl bg-[#f4f4f5] text-[#09090b] flex items-center justify-center mx-auto mb-4">
+            <Layers className="h-7 w-7" />
+          </div>
+          <h3 className="text-base font-bold text-[#09090b]">No custom templates saved yet</h3>
+          <p className="text-xs text-[#71717a] mt-1 max-w-sm mx-auto">
+            You can save any proposal as a reusable template directly from the proposal editor or use the pre-built gallery.
+          </p>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <Button onClick={() => router.push('/templates/create')}>Create Template</Button>
-            <Button variant="outline" onClick={() => router.push('/templates/explore')}>Explore Templates</Button>
+            <Button variant="accent" size="md" className="font-bold" onClick={() => router.push('/templates/explore')}>
+              Explore Templates
+            </Button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {templates.map((template) => (
-            <Card key={template.id} className="flex flex-col">
-              <div
-                className="h-32 rounded-t-lg"
-                style={{ backgroundColor: template.styles.colors.primary + '15' }}
-              >
-                <div className="flex items-center justify-center h-full">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: template.styles.colors.primary }}
-                  >
-                    <span className="text-white text-xl font-bold">{template.title[0]}</span>
-                  </div>
-                </div>
-              </div>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg">{template.title}</CardTitle>
-                  <span className="shrink-0 text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                    {template.category || 'Uncategorized'}
+            <Card key={template.id} hoverEffect className="flex flex-col justify-between overflow-hidden">
+              <div className="h-28 bg-[#09090b] text-white p-5 flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-28 h-28 rounded-full bg-[#d4ff00]/10 blur-xl pointer-events-none" />
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 text-[#d4ff00] px-2 py-0.5 rounded-full">
+                    {template.category || 'Custom'}
+                  </span>
+                  <span className="text-[11px] font-mono text-neutral-400">
+                    {template.sections.length} sections
                   </span>
                 </div>
-                <CardDescription className="line-clamp-2">{template.description || 'No description'}</CardDescription>
-              </CardHeader>
-              <CardContent className="mt-auto pt-0">
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                  <span>{template.sections.length} sections</span>
-                  <span>{formatDate(template.updatedAt)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleEdit(template.id)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    loading={duplicatingId === template.id}
-                    onClick={() => handleDuplicate(template)}
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    loading={deletingId === template.id}
-                    onClick={() => handleDelete(template.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </Button>
+                <h3 className="text-base font-bold text-white truncate relative z-10">{template.title}</h3>
+              </div>
+
+              <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <p className="text-xs text-[#52525b] leading-relaxed line-clamp-2">
+                  {template.description || 'No description provided.'}
+                </p>
+
+                <div className="space-y-3 pt-3 border-t border-[#f4f4f5]">
+                  <div className="flex items-center justify-between text-[11px] text-[#a1a1aa]">
+                    <span>Updated {formatDate(template.updatedAt)}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="flex-1 font-bold text-xs"
+                      onClick={() => handleUseTemplate(template)}
+                    >
+                      Use Template
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      loading={duplicatingId === template.id}
+                      onClick={() => handleDuplicate(template)}
+                      title="Duplicate"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      loading={deletingId === template.id}
+                      onClick={() => handleDelete(template.id)}
+                      className="text-red-500 hover:text-red-700"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

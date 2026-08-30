@@ -3,33 +3,39 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-interface AvatarProps {
+export interface AvatarProps {
   src?: string | null;
   alt?: string;
   fallback?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
 const sizes = {
-  sm: 'h-8 w-8 text-xs',
-  md: 'h-10 w-10 text-sm',
-  lg: 'h-12 w-12 text-base',
-  xl: 'h-16 w-16 text-lg',
+  xs: 'h-6 w-6 text-[10px]',
+  sm: 'h-8 w-8 text-xs font-semibold',
+  md: 'h-10 w-10 text-sm font-semibold',
+  lg: 'h-12 w-12 text-base font-bold',
+  xl: 'h-16 w-16 text-xl font-bold',
 };
 
 export function Avatar({ src, alt, fallback, size = 'md', className }: AvatarProps) {
   const [showFallback, setShowFallback] = React.useState(!src);
 
-  if (showFallback) {
+  if (showFallback || !src) {
     const initials = fallback
-      ? fallback.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+      ? fallback
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2)
       : '?';
 
     return (
       <div
         className={cn(
-          'rounded-full bg-primary flex items-center justify-center font-medium text-primary-foreground',
+          'rounded-full bg-[#09090b] flex items-center justify-center font-semibold text-[#d4ff00] border border-black/10 select-none shadow-sm',
           sizes[size],
           className
         )}
@@ -42,10 +48,10 @@ export function Avatar({ src, alt, fallback, size = 'md', className }: AvatarPro
 
   return (
     <img
-      src={src || undefined}
+      src={src}
       alt={alt || fallback || 'Avatar'}
       onError={() => setShowFallback(true)}
-      className={cn('rounded-full object-cover', sizes[size], className)}
+      className={cn('rounded-full object-cover border border-[#e4e4e7] shadow-sm', sizes[size], className)}
     />
   );
 }

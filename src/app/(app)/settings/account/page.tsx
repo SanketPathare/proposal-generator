@@ -9,8 +9,9 @@ import {
   deleteUser,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { CheckCircle2, ShieldAlert, KeyRound } from 'lucide-react';
 
 export default function AccountSettingsPage() {
   const { user } = useAuth();
@@ -57,6 +58,7 @@ export default function AccountSettingsPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setTimeout(() => setPasswordSuccess(''), 3000);
     } catch (err: any) {
       console.error('Failed to change password:', err);
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
@@ -76,7 +78,7 @@ export default function AccountSettingsPage() {
     setDeleteError('');
 
     if (deleteConfirmText !== 'DELETE') {
-      setDeleteError('Please type DELETE to confirm.');
+      setDeleteError('Please type DELETE in capital letters to confirm.');
       return;
     }
 
@@ -96,30 +98,49 @@ export default function AccountSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your password and account.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#09090b] tracking-tight">Account & Security</h1>
+        <p className="text-sm text-[#71717a] mt-1">Manage authentication credentials and danger zone settings.</p>
       </div>
 
+      {/* Password Change Card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Change Password</CardTitle>
-          <CardDescription>Update your account password. You must enter your current password.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 sm:p-8 space-y-5">
+          <div className="flex items-center gap-2 pb-2">
+            <div className="h-8 w-8 rounded-xl bg-[#09090b] text-[#d4ff00] flex items-center justify-center">
+              <KeyRound className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-[#09090b]">Change Password</h2>
+              <p className="text-xs text-[#71717a]">Enter your current password to set a new password.</p>
+            </div>
+          </div>
+
+          {passwordError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
+              {passwordError}
+            </div>
+          )}
+
+          {passwordSuccess && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" /> {passwordSuccess}
+            </div>
+          )}
+
           <div className="space-y-4 max-w-md">
             <Input
               label="Current Password"
               type="password"
-              placeholder="Enter current password"
+              placeholder="••••••••"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
             />
             <Input
               label="New Password"
               type="password"
-              placeholder="Enter new password"
+              placeholder="Min 6 characters"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -130,43 +151,52 @@ export default function AccountSettingsPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
+          </div>
 
-            {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
-            {passwordSuccess && <p className="text-sm text-green-600">{passwordSuccess}</p>}
-
-            <Button onClick={handleChangePassword} loading={passwordSaving}>
+          <div className="pt-2">
+            <Button variant="primary" size="md" className="font-bold text-xs" onClick={handleChangePassword} loading={passwordSaving}>
               Update Password
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="text-lg text-red-600">Danger Zone</CardTitle>
-          <CardDescription>Permanently delete your account and all associated data.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4 max-w-md">
-            <p className="text-sm text-gray-600">
-              This action is irreversible. All your proposals, clients, templates, and settings will be permanently deleted.
-            </p>
+      {/* Danger Zone */}
+      <Card className="border-red-200 bg-red-50/30">
+        <CardContent className="p-6 sm:p-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-red-600 text-white flex items-center justify-center">
+              <ShieldAlert className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-red-900">Danger Zone</h2>
+              <p className="text-xs text-red-700">Permanently delete account and erase all proposal data.</p>
+            </div>
+          </div>
+
+          <div className="max-w-md space-y-4 pt-2">
             <Input
-              label="Type DELETE to confirm"
+              label="Type DELETE to confirm permanent deletion"
               placeholder="DELETE"
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
             />
 
-            {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+            {deleteError && (
+              <div className="p-3 bg-red-100 border border-red-300 rounded-xl text-red-800 text-xs font-medium">
+                {deleteError}
+              </div>
+            )}
 
             <Button
-              variant="destructive"
+              variant="primary"
+              size="md"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs disabled:opacity-40"
               loading={deleting}
               disabled={deleteConfirmText !== 'DELETE'}
               onClick={handleDeleteAccount}
             >
-              Delete Account
+              Permanently Delete Account
             </Button>
           </div>
         </CardContent>

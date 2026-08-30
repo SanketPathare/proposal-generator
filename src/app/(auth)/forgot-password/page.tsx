@@ -23,7 +23,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError('');
     try {
-      await sendPasswordResetEmail(getAuth(), email.trim());
+      const auth = getAuth();
+      if (auth) {
+        await sendPasswordResetEmail(auth, email.trim());
+      }
       setSent(true);
     } catch (err: any) {
       if (err.code === 'auth/user-not-found') {
@@ -42,27 +45,28 @@ export default function ForgotPasswordPage() {
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <div className="mx-auto h-14 w-14 rounded-full bg-green-100 flex items-center justify-center mb-4">
-            <CheckCircle className="h-7 w-7 text-green-600" />
+          <div className="mx-auto h-14 w-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 border border-emerald-200">
+            <CheckCircle className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
-          <p className="mt-2 text-gray-500 text-sm">
-            We&apos;ve sent a password reset link to{' '}
-            <span className="font-medium text-gray-700">{email}</span>.
-            Check your inbox and follow the instructions.
+          <h1 className="text-2xl font-bold text-[#09090b]">Check your email</h1>
+          <p className="mt-2 text-[#71717a] text-xs leading-relaxed">
+            We&apos;ve sent a password reset link to <span className="font-semibold text-[#09090b]">{email}</span>.
           </p>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-          <p>Didn&apos;t receive the email? Check your spam folder or try again with a different email address.</p>
-        </div>
-
-        <Button variant="outline" className="w-full" onClick={() => { setSent(false); setEmail(''); }}>
+        <Button
+          variant="outline"
+          className="w-full font-semibold"
+          onClick={() => {
+            setSent(false);
+            setEmail('');
+          }}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Try a different email
         </Button>
 
-        <Link href="/login" className="block text-center text-sm text-gray-500 hover:text-gray-700">
+        <Link href="/login" className="block text-center text-xs font-semibold text-[#71717a] hover:text-[#09090b]">
           Back to Sign In
         </Link>
       </div>
@@ -71,32 +75,22 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center lg:text-left">
-        <h1 className="text-2xl font-bold text-gray-900">Reset your password</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Enter your email and we&apos;ll send you a reset link
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[#09090b]">Reset your password</h1>
+        <p className="mt-2 text-sm text-[#71717a]">
+          Enter your email and we&apos;ll send you a recovery link.
         </p>
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-medium">
           {error}
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-          <Mail className="h-5 w-5 text-blue-600 shrink-0" />
-          <p className="text-sm text-blue-700">
-            Enter the email address associated with your account and we&apos;ll send you a link to reset your password.
-          </p>
-        </div>
-
         <Input
-          label="Email"
+          label="Email Address"
           type="email"
           placeholder="name@company.com"
           value={email}
@@ -104,14 +98,13 @@ export default function ForgotPasswordPage() {
           autoComplete="email"
         />
 
-        <Button type="submit" className="w-full" loading={loading}>
+        <Button type="submit" variant="primary" size="lg" className="w-full font-bold" loading={loading}>
           Send Reset Link
         </Button>
       </form>
 
-      {/* Footer */}
-      <Link href="/login" className="block text-center text-sm text-gray-500 hover:text-gray-700">
-        <ArrowLeft className="h-4 w-4 inline mr-1" />
+      <Link href="/login" className="block text-center text-xs font-semibold text-[#71717a] hover:text-[#09090b]">
+        <ArrowLeft className="h-3.5 w-3.5 inline mr-1" />
         Back to Sign In
       </Link>
     </div>

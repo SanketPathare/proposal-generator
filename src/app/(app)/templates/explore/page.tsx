@@ -6,45 +6,49 @@ import { useAuth } from '@/context/AuthContext';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Template } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/Card';
+import {
+  Search,
+  Layers,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  Code,
+  Smartphone,
+  Palette,
+  Briefcase,
+  TrendingUp,
+  PenTool,
+} from 'lucide-react';
 
-const TEMPLATE_CATEGORIES = [
-  { value: 'all', label: 'All Categories' },
+const CATEGORIES = [
+  { value: 'all', label: 'All Templates' },
   { value: 'web-development', label: 'Web Development' },
-  { value: 'mobile-app', label: 'Mobile App' },
   { value: 'ui-ux-design', label: 'UI/UX Design' },
-  { value: 'branding', label: 'Branding' },
-  { value: 'marketing', label: 'Marketing' },
+  { value: 'mobile-app', label: 'Mobile App' },
+  { value: 'marketing', label: 'Marketing & SEO' },
+  { value: 'branding', label: 'Brand Identity' },
   { value: 'consulting', label: 'Consulting' },
-  { value: 'writing', label: 'Writing & Content' },
-  { value: 'photography', label: 'Photography' },
-  { value: 'other', label: 'Other' },
 ];
 
 const PREBUILT_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
     userId: null,
-    title: 'Web Development Proposal',
-    description: 'A comprehensive template for web development projects including scope, deliverables, timeline, and pricing sections.',
+    title: 'Fullstack Web App Proposal',
+    description: 'Complete Next.js/React engineering proposal with technical deliverables, milestone timelines, and interactive pricing.',
     category: 'web-development',
     thumbnailUrl: '',
     thumbnailPublicId: '',
     sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { heading: 'Web Development Proposal', subheading: 'Professional Web Solutions' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Introduction', content: { text: 'We are excited to present our proposal for your web development project.' }, order: 1 },
-      { id: '3', type: 'scope', title: 'Project Scope', content: { text: 'This project includes design, development, and deployment of your website.' }, order: 2 },
-      { id: '4', type: 'features', title: 'Key Features', content: { items: ['Responsive Design', 'CMS Integration', 'SEO Optimization'] }, order: 3 },
-      { id: '5', type: 'timeline', title: 'Timeline', content: { milestones: [] }, order: 4 },
-      { id: '6', type: 'pricing', title: 'Pricing', content: { rows: [], subtotal: 0, discount: 0, discountType: 'percentage', tax: 0, taxType: 'percentage', total: 0, currency: 'INR' }, order: 5 },
-      { id: '7', type: 'terms', title: 'Terms & Conditions', content: { text: 'Payment terms, revision policy, and other conditions.' }, order: 6 },
-      { id: '8', type: 'contact', title: 'Contact Information', content: { text: 'We look forward to working with you.' }, order: 7 },
+      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Web App Engineering Proposal', subtitle: 'Modern Fullstack Solution' }, order: 0 },
+      { id: '2', type: 'introduction', title: 'Executive Summary', content: '<p>Our team specializes in high-performance web applications built on Next.js, TypeScript, and modern cloud infrastructure.</p>', order: 1 },
+      { id: '3', type: 'scope', title: 'Scope of Engineering', content: '<ul><li>Frontend Application & UI Component Architecture</li><li>REST/GraphQL API integrations & DB Schema</li><li>Security, Performance Optimization & Automated CI/CD</li></ul>', order: 2 },
+      { id: '4', type: 'pricing', title: 'Investment & Pricing', content: { rows: [{ id: '1', item: 'Web App Engineering Sprint', description: 'Next.js Frontend & API Integration', quantity: 1, unitPrice: 6500, total: 6500 }, { id: '2', item: 'QA, Testing & Launch', description: 'Cross-browser testing & cloud deployment', quantity: 1, unitPrice: 1500, total: 1500 }], subtotal: 8000, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 8000, currency: 'USD' }, order: 3 },
+      { id: '5', type: 'terms', title: 'Terms & Milestones', content: '<p>Payment schedule: 50% deposit upon commencement, 50% upon final production deployment.</p>', order: 4 },
     ],
     styles: {
-      fonts: { heading: 'Inter', body: 'Inter' },
-      colors: { primary: '#2563eb', secondary: '#1e40af', accent: '#3b82f6', background: '#ffffff', text: '#1f2937' },
+      fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+      colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
       logoPosition: 'left',
       header: '',
       footer: '',
@@ -53,99 +57,20 @@ const PREBUILT_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
   },
   {
     userId: null,
-    title: 'Mobile App Development',
-    description: 'Tailored for mobile app projects with sections for platform details, app features, and development phases.',
-    category: 'mobile-app',
-    thumbnailUrl: '',
-    thumbnailPublicId: '',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { heading: 'Mobile App Proposal', subheading: 'iOS & Android Development' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Introduction', content: { text: 'Our team is ready to bring your mobile app idea to life.' }, order: 1 },
-      { id: '3', type: 'overview', title: 'App Overview', content: { text: 'A detailed overview of the application concept and goals.' }, order: 2 },
-      { id: '4', type: 'features', title: 'App Features', content: { items: ['Cross-platform Support', 'Offline Mode', 'Push Notifications'] }, order: 3 },
-      { id: '5', type: 'deliverables', title: 'Deliverables', content: { items: ['Source Code', 'App Store Submission', 'Documentation'] }, order: 4 },
-      { id: '6', type: 'timeline', title: 'Development Timeline', content: { milestones: [] }, order: 5 },
-      { id: '7', type: 'pricing', title: 'Pricing', content: { rows: [], subtotal: 0, discount: 0, discountType: 'percentage', tax: 0, taxType: 'percentage', total: 0, currency: 'INR' }, order: 6 },
-      { id: '8', type: 'terms', title: 'Terms', content: { text: 'Project terms and conditions.' }, order: 7 },
-    ],
-    styles: {
-      fonts: { heading: 'Poppins', body: 'Inter' },
-      colors: { primary: '#7c3aed', secondary: '#6d28d9', accent: '#8b5cf6', background: '#ffffff', text: '#1f2937' },
-      logoPosition: 'center',
-      header: '',
-      footer: '',
-    },
-    isPublic: true,
-  },
-  {
-    userId: null,
-    title: 'UI/UX Design Proposal',
-    description: 'Perfect for design projects with user research, wireframing, prototyping, and testing phases.',
+    title: 'UI/UX Design System & Prototype',
+    description: 'User research, wireframing, high-fidelity design system in Figma, and interactive prototypes.',
     category: 'ui-ux-design',
     thumbnailUrl: '',
     thumbnailPublicId: '',
     sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { heading: 'UI/UX Design Proposal', subheading: 'User-Centered Design' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Introduction', content: { text: 'We focus on creating intuitive and beautiful user experiences.' }, order: 1 },
-      { id: '3', type: 'scope', title: 'Design Scope', content: { text: 'Research, wireframing, visual design, and usability testing.' }, order: 2 },
-      { id: '4', type: 'features', title: 'Design Deliverables', content: { items: ['User Research Report', 'Wireframes', 'High-Fidelity Mockups', 'Interactive Prototype'] }, order: 3 },
-      { id: '5', type: 'timeline', title: 'Design Timeline', content: { milestones: [] }, order: 4 },
-      { id: '6', type: 'pricing', title: 'Pricing', content: { rows: [], subtotal: 0, discount: 0, discountType: 'percentage', tax: 0, taxType: 'percentage', total: 0, currency: 'INR' }, order: 5 },
-      { id: '7', type: 'terms', title: 'Terms', content: { text: 'Design revision policy and intellectual property terms.' }, order: 6 },
+      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'UI/UX Product Design Proposal', subtitle: 'User-Centered Interface Architecture' }, order: 0 },
+      { id: '2', type: 'introduction', title: 'Design Vision', content: '<p>We craft intuitive, engaging interfaces that turn complex workflows into delightful user journeys.</p>', order: 1 },
+      { id: '3', type: 'deliverables', title: 'Design Deliverables', content: '<ul><li>User Persona & Information Architecture</li><li>Figma Design System & Token Library</li><li>High-Fidelity Interactive Clickable Prototype</li></ul>', order: 2 },
+      { id: '4', type: 'pricing', title: 'Design Investment', content: { rows: [{ id: '1', item: 'Figma UI/UX Design System', description: 'Complete screen flows and tokens', quantity: 1, unitPrice: 4200, total: 4200 }], subtotal: 4200, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 4200, currency: 'USD' }, order: 3 },
     ],
     styles: {
-      fonts: { heading: 'DM Sans', body: 'Inter' },
-      colors: { primary: '#ec4899', secondary: '#db2777', accent: '#f472b6', background: '#ffffff', text: '#1f2937' },
-      logoPosition: 'right',
-      header: '',
-      footer: '',
-    },
-    isPublic: true,
-  },
-  {
-    userId: null,
-    title: 'Branding & Identity',
-    description: 'For brand identity projects covering logo design, brand guidelines, and visual identity systems.',
-    category: 'branding',
-    thumbnailUrl: '',
-    thumbnailPublicId: '',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { heading: 'Branding Proposal', subheading: 'Creating Your Brand Identity' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Introduction', content: { text: 'Building a memorable brand that resonates with your audience.' }, order: 1 },
-      { id: '3', type: 'scope', title: 'Branding Scope', content: { text: 'Logo design, brand guidelines, color palette, and typography.' }, order: 2 },
-      { id: '4', type: 'features', title: 'Brand Deliverables', content: { items: ['Logo Design', 'Brand Style Guide', 'Business Cards', 'Letterhead'] }, order: 3 },
-      { id: '5', type: 'timeline', title: 'Timeline', content: { milestones: [] }, order: 4 },
-      { id: '6', type: 'pricing', title: 'Pricing', content: { rows: [], subtotal: 0, discount: 0, discountType: 'percentage', tax: 0, taxType: 'percentage', total: 0, currency: 'INR' }, order: 5 },
-      { id: '7', type: 'terms', title: 'Terms', content: { text: 'Usage rights and ownership terms.' }, order: 6 },
-    ],
-    styles: {
-      fonts: { heading: 'Playfair Display', body: 'Inter' },
-      colors: { primary: '#f59e0b', secondary: '#d97706', accent: '#fbbf24', background: '#ffffff', text: '#1f2937' },
-      logoPosition: 'center',
-      header: '',
-      footer: '',
-    },
-    isPublic: true,
-  },
-  {
-    userId: null,
-    title: 'Digital Marketing',
-    description: 'Comprehensive marketing proposal template with strategy, channels, KPIs, and campaign planning.',
-    category: 'marketing',
-    thumbnailUrl: '',
-    thumbnailPublicId: '',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { heading: 'Marketing Proposal', subheading: 'Digital Marketing Strategy' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Introduction', content: { text: 'Driving growth through data-driven marketing strategies.' }, order: 1 },
-      { id: '3', type: 'scope', title: 'Marketing Scope', content: { text: 'SEO, social media, content marketing, and paid advertising.' }, order: 2 },
-      { id: '4', type: 'features', title: 'Services', content: { items: ['SEO Optimization', 'Social Media Management', 'Content Creation', 'PPC Campaigns'] }, order: 3 },
-      { id: '5', type: 'timeline', title: 'Campaign Timeline', content: { milestones: [] }, order: 4 },
-      { id: '6', type: 'pricing', title: 'Pricing', content: { rows: [], subtotal: 0, discount: 0, discountType: 'percentage', tax: 0, taxType: 'percentage', total: 0, currency: 'INR' }, order: 5 },
-      { id: '7', type: 'terms', title: 'Terms', content: { text: 'Campaign terms and reporting schedule.' }, order: 6 },
-    ],
-    styles: {
-      fonts: { heading: 'Montserrat', body: 'Open Sans' },
-      colors: { primary: '#059669', secondary: '#047857', accent: '#10b981', background: '#ffffff', text: '#1f2937' },
+      fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+      colors: { primary: '#6366f1', secondary: '#f4f4f5', accent: '#6366f1', background: '#ffffff', text: '#09090b' },
       logoPosition: 'left',
       header: '',
       footer: '',
@@ -154,24 +79,82 @@ const PREBUILT_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
   },
   {
     userId: null,
-    title: 'Consulting Services',
-    description: 'Professional consulting proposal with problem analysis, recommendations, and implementation plan.',
+    title: 'Mobile App (iOS & Android)',
+    description: 'Cross-platform mobile application architecture, state management, and app store deployment.',
+    category: 'mobile-app',
+    thumbnailUrl: '',
+    thumbnailPublicId: '',
+    sections: [
+      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Mobile App Development Proposal', subtitle: 'Cross-Platform iOS & Android' }, order: 0 },
+      { id: '2', type: 'scope', title: 'App Modules', content: '<p>Native performance cross-platform app with offline caching, push notifications, and biometric auth.</p>', order: 1 },
+      { id: '3', type: 'pricing', title: 'App Investment', content: { rows: [{ id: '1', item: 'React Native Mobile App', description: 'iOS and Android build', quantity: 1, unitPrice: 7500, total: 7500 }], subtotal: 7500, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 7500, currency: 'USD' }, order: 2 },
+    ],
+    styles: {
+      fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+      colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
+      logoPosition: 'left',
+      header: '',
+      footer: '',
+    },
+    isPublic: true,
+  },
+  {
+    userId: null,
+    title: 'Brand Identity & Visual System',
+    description: 'Logo mark, typography guidelines, color palette, social kit, and brand style guide.',
+    category: 'branding',
+    thumbnailUrl: '',
+    thumbnailPublicId: '',
+    sections: [
+      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Brand Identity Strategy & System', subtitle: 'Distinctive Visual Identity' }, order: 0 },
+      { id: '2', type: 'scope', title: 'Brand Deliverables', content: '<ul><li>Primary & Secondary Logo Marks</li><li>Color Palette & Typography Specs</li><li>Brand Guidelines PDF Book</li></ul>', order: 1 },
+      { id: '3', type: 'pricing', title: 'Branding Fee', content: { rows: [{ id: '1', item: 'Brand Identity Package', description: 'Logos, guidelines & assets', quantity: 1, unitPrice: 3200, total: 3200 }], subtotal: 3200, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 3200, currency: 'USD' }, order: 2 },
+    ],
+    styles: {
+      fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+      colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
+      logoPosition: 'left',
+      header: '',
+      footer: '',
+    },
+    isPublic: true,
+  },
+  {
+    userId: null,
+    title: 'Growth Marketing & SEO Strategy',
+    description: 'Search engine optimization, paid ad campaigns, content marketing, and conversion optimization.',
+    category: 'marketing',
+    thumbnailUrl: '',
+    thumbnailPublicId: '',
+    sections: [
+      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Growth Marketing Proposal', subtitle: 'Data-Driven Acquisition Campaign' }, order: 0 },
+      { id: '2', type: 'scope', title: 'Campaign Strategy', content: '<p>Comprehensive organic search rankings and targeted paid acquisition roadmap.</p>', order: 1 },
+      { id: '3', type: 'pricing', title: 'Monthly Retainer', content: { rows: [{ id: '1', item: 'Quarterly Growth Sprint', description: '3-month execution retainer', quantity: 1, unitPrice: 4500, total: 4500 }], subtotal: 4500, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 4500, currency: 'USD' }, order: 2 },
+    ],
+    styles: {
+      fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+      colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
+      logoPosition: 'left',
+      header: '',
+      footer: '',
+    },
+    isPublic: true,
+  },
+  {
+    userId: null,
+    title: 'Strategic Advisory & Consulting',
+    description: 'Organizational review, digital transformation roadmap, and executive advisory sessions.',
     category: 'consulting',
     thumbnailUrl: '',
     thumbnailPublicId: '',
     sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { heading: 'Consulting Proposal', subheading: 'Strategic Advisory Services' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Introduction', content: { text: 'Expert consulting to help you achieve your business objectives.' }, order: 1 },
-      { id: '3', type: 'requirements', title: 'Requirements Analysis', content: { text: 'Understanding your challenges and business goals.' }, order: 2 },
-      { id: '4', type: 'scope', title: 'Engagement Scope', content: { text: 'Assessment, strategy development, and implementation support.' }, order: 3 },
-      { id: '5', type: 'deliverables', title: 'Deliverables', content: { items: ['Analysis Report', 'Strategic Recommendations', 'Implementation Roadmap'] }, order: 4 },
-      { id: '6', type: 'timeline', title: 'Timeline', content: { milestones: [] }, order: 5 },
-      { id: '7', type: 'pricing', title: 'Pricing', content: { rows: [], subtotal: 0, discount: 0, discountType: 'percentage', tax: 0, taxType: 'percentage', total: 0, currency: 'INR' }, order: 6 },
-      { id: '8', type: 'terms', title: 'Terms', content: { text: 'Confidentiality and engagement terms.' }, order: 7 },
+      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Strategic Advisory Proposal', subtitle: 'Business Optimization Engagement' }, order: 0 },
+      { id: '2', type: 'scope', title: 'Advisory Pillars', content: '<p>Deep diagnostic review, strategic blueprint, and leadership implementation coaching.</p>', order: 1 },
+      { id: '3', type: 'pricing', title: 'Advisory Retainer', content: { rows: [{ id: '1', item: 'Strategic Advisory Engagement', description: '4-week intensive sprint', quantity: 1, unitPrice: 5000, total: 5000 }], subtotal: 5000, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 5000, currency: 'USD' }, order: 2 },
     ],
     styles: {
-      fonts: { heading: 'Georgia', body: 'Arial' },
-      colors: { primary: '#1e3a5f', secondary: '#15294a', accent: '#2563eb', background: '#ffffff', text: '#1f2937' },
+      fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+      colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
       logoPosition: 'left',
       header: '',
       footer: '',
@@ -180,51 +163,21 @@ const PREBUILT_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
   },
 ];
 
-const CATEGORY_COLOR_MAP: Record<string, string> = {
-  'web-development': 'bg-blue-100 text-blue-800',
-  'mobile-app': 'bg-purple-100 text-purple-800',
-  'ui-ux-design': 'bg-pink-100 text-pink-800',
-  'branding': 'bg-amber-100 text-amber-800',
-  'marketing': 'bg-emerald-100 text-emerald-800',
-  'consulting': 'bg-slate-100 text-slate-800',
-  'writing': 'bg-indigo-100 text-indigo-800',
-  'photography': 'bg-rose-100 text-rose-800',
-  'other': 'bg-gray-100 text-gray-800',
-};
-
 export default function ExploreTemplatesPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [templates, setTemplates] = useState<Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[]>(PREBUILT_TEMPLATES);
-  const [filteredTemplates, setFilteredTemplates] = useState(templates);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [savingTemplateId, setSavingTemplateId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [usingIndex, setUsingIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    let result = templates;
-
-    if (selectedCategory !== 'all') {
-      result = result.filter((t) => t.category === selectedCategory);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q)
-      );
-    }
-
-    setFilteredTemplates(result);
-  }, [selectedCategory, searchQuery, templates]);
+  const filteredTemplates = PREBUILT_TEMPLATES.filter((t) => {
+    const matchCategory = selectedCategory === 'all' || t.category === selectedCategory;
+    const matchSearch =
+      !search.trim() ||
+      t.title.toLowerCase().includes(search.toLowerCase()) ||
+      t.description.toLowerCase().includes(search.toLowerCase());
+    return matchCategory && matchSearch;
+  });
 
   const handleUseTemplate = async (template: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>, index: number) => {
     if (!user) {
@@ -232,109 +185,121 @@ export default function ExploreTemplatesPage() {
       return;
     }
 
-    setSavingTemplateId(`prebuilt-${index}`);
+    setUsingIndex(index);
     try {
-      const { userId: _, ...templateData } = template;
-      await firestoreHelpers.createTemplate(user.uid, {
-        ...templateData,
-        isPublic: false,
+      const newProposal = await firestoreHelpers.createProposal(user.uid, {
+        clientId: null,
+        title: template.title,
+        purpose: template.description,
+        status: 'draft',
+        templateId: `template-${index}`,
+        currency: 'USD',
+        sections: template.sections.map((s) => ({ ...s, id: Math.random().toString(36).substring(2, 9) })),
+        pricing: null,
+        shareId: null,
+        sharedAt: null,
+        expiresAt: null,
+        passwordHash: null,
+        lastViewedAt: null,
+        acceptedAt: null,
+        rejectedAt: null,
       });
-      router.push('/templates/my');
+
+      router.push(`/proposals/${newProposal.id}`);
     } catch (err) {
-      console.error('Failed to save template:', err);
+      console.error('Use template error:', err);
     } finally {
-      setSavingTemplateId(null);
+      setUsingIndex(null);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Explore Templates</h1>
-        <p className="text-gray-500 mt-1">Choose from pre-built templates to jumpstart your proposals.</p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="w-full sm:w-56">
-          <Select
-            options={TEMPLATE_CATEGORIES}
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          />
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#09090b] tracking-tight">Template Gallery</h1>
+          <p className="text-sm text-[#71717a] mt-1">
+            Choose from curated, high-converting proposal architectures.
+          </p>
         </div>
       </div>
 
-      {filteredTemplates.length === 0 ? (
-        <div className="text-center py-16">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No templates found</h3>
-          <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filter criteria.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTemplates.map((template, index) => {
-            const categoryColor = CATEGORY_COLOR_MAP[template.category] || CATEGORY_COLOR_MAP['other'];
-            const isSaving = savingTemplateId === `prebuilt-${index}`;
-
+      {/* Categories & Search */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat.value;
             return (
-              <Card key={index} className="flex flex-col">
-                <div
-                  className="h-40 rounded-t-lg"
-                  style={{ backgroundColor: template.styles.colors.primary + '15' }}
-                >
-                  <div className="flex items-center justify-center h-full">
-                    <div
-                      className="w-16 h-16 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: template.styles.colors.primary }}
-                    >
-                      <span className="text-white text-2xl font-bold">{template.title[0]}</span>
-                    </div>
-                  </div>
-                </div>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-lg">{template.title}</CardTitle>
-                    <span className={cn('shrink-0 text-xs font-medium px-2 py-1 rounded-full', categoryColor)}>
-                      {TEMPLATE_CATEGORIES.find((c) => c.value === template.category)?.label || template.category}
-                    </span>
-                  </div>
-                  <CardDescription className="line-clamp-2">{template.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="mt-auto pt-0">
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
-                    <span>{template.sections.length} sections</span>
-                    <span>{template.styles.colors.primary}</span>
-                  </div>
-                  <Button
-                    className="w-full"
-                    loading={isSaving}
-                    onClick={() => handleUseTemplate(template, index)}
-                  >
-                    Use Template
-                  </Button>
-                </CardContent>
-              </Card>
+              <button
+                key={cat.value}
+                onClick={() => setSelectedCategory(cat.value)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#09090b] text-white shadow-sm'
+                    : 'bg-[#f4f4f5] text-[#71717a] hover:bg-[#e4e4e7] hover:text-[#09090b]'
+                }`}
+              >
+                {cat.label}
+              </button>
             );
           })}
         </div>
-      )}
+
+        <div className="relative max-w-xs">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
+          <input
+            type="text"
+            placeholder="Search templates..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs font-medium rounded-full border border-[#e4e4e7] bg-white focus:outline-none focus:ring-2 focus:ring-[#09090b]/10 focus:border-[#09090b] transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Templates Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTemplates.map((template, idx) => (
+          <Card key={idx} hoverEffect className="flex flex-col justify-between overflow-hidden group">
+            {/* Top Cover preview */}
+            <div className="h-32 bg-[#09090b] text-white p-5 flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-[#d4ff00]/10 blur-xl pointer-events-none" />
+              <div className="flex items-center justify-between relative z-10">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-white/15 text-[#d4ff00] px-2.5 py-0.5 rounded-full">
+                  {template.category}
+                </span>
+                <span className="text-[11px] font-mono text-neutral-400">
+                  {template.sections.length} sections
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-white tracking-tight leading-tight relative z-10">
+                {template.title}
+              </h3>
+            </div>
+
+            {/* Description & Action */}
+            <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
+              <p className="text-xs text-[#52525b] leading-relaxed line-clamp-3">
+                {template.description}
+              </p>
+
+              <div className="pt-3 border-t border-[#f4f4f5]">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="w-full font-bold text-xs gap-1.5"
+                  loading={usingIndex === idx}
+                  onClick={() => handleUseTemplate(template, idx)}
+                >
+                  <span>Use This Template</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

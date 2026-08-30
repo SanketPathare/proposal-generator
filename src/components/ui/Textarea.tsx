@@ -3,7 +3,7 @@
 import { TextareaHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
-interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -11,12 +11,12 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, helperText, id, ...props }, ref) => {
-    const textareaId = id || label?.toLowerCase().replace(/\s+/g, '-');
-    
+    const textareaId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={textareaId} className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={textareaId} className="block text-xs font-semibold uppercase tracking-wider text-[#52525b] mb-1.5">
             {label}
           </label>
         )}
@@ -24,11 +24,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={textareaId}
           className={cn(
-            'flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400',
-            'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            'transition-colors resize-y',
-            error && 'border-red-500 focus:ring-red-500',
+            'flex min-h-[100px] w-full rounded-xl border border-[#e4e4e7] bg-white px-4 py-3 text-sm text-[#09090b] placeholder:text-[#a1a1aa]',
+            'focus:outline-none focus:ring-2 focus:ring-[#09090b]/10 focus:border-[#09090b]',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[#f4f4f5]',
+            'transition-all duration-200 resize-y leading-relaxed',
+            error && 'border-red-500 focus:ring-red-500/10 focus:border-red-500',
             className
           )}
           aria-invalid={error ? 'true' : 'false'}
@@ -36,12 +36,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p id={`${textareaId}-error`} className="mt-1 text-sm text-red-600" role="alert">
+          <p id={`${textareaId}-error`} className="mt-1.5 text-xs font-medium text-red-600" role="alert">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${textareaId}-helper`} className="mt-1 text-sm text-gray-500">
+          <p id={`${textareaId}-helper`} className="mt-1.5 text-xs text-[#71717a]">
             {helperText}
           </p>
         )}

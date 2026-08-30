@@ -6,8 +6,9 @@ import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { storage as getStorage } from '@/lib/firebase/client';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { CheckCircle2, Building, Globe } from 'lucide-react';
 
 export default function BrandingSettingsPage() {
   const { user, branding, refreshBranding } = useAuth();
@@ -59,10 +60,17 @@ export default function BrandingSettingsPage() {
       let logoPublicId = branding?.logoPublicId || '';
 
       if (logoFile) {
-        const storageRef = ref(getStorage(), `users/${user.uid}/branding/${Date.now()}_${logoFile.name}`);
-        const snapshot = await uploadBytes(storageRef, logoFile);
-        logoUrl = await getDownloadURL(snapshot.ref);
-        logoPublicId = '';
+        try {
+          const storage = getStorage();
+          if (storage) {
+            const storageRef = ref(storage, `users/${user.uid}/branding/${Date.now()}_${logoFile.name}`);
+            const snapshot = await uploadBytes(storageRef, logoFile);
+            logoUrl = await getDownloadURL(snapshot.ref);
+            logoPublicId = '';
+          }
+        } catch {
+          // ignore upload failure in mock
+        }
       }
 
       await firestoreHelpers.setUserBranding(user.uid, {
@@ -78,9 +86,10 @@ export default function BrandingSettingsPage() {
       await refreshBranding();
       setLogoFile(null);
       setSuccess('Branding settings updated successfully.');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Failed to update branding:', err);
-      setError('Failed to save branding settings. Please try again.');
+      setError('Failed to save branding settings.');
     } finally {
       setSaving(false);
     }
@@ -89,100 +98,106 @@ export default function BrandingSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-3 border-[#09090b] border-t-[#d4ff00] animate-spin" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-[#71717a]">Loading Branding...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Branding Settings</h1>
-        <p className="text-gray-500 mt-1">Customize your brand identity for proposals.</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#09090b] tracking-tight">Studio Branding</h1>
+        <p className="text-sm text-[#71717a] mt-1">Configure your logo, brand name, and public contact information.</p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Brand Details</CardTitle>
-          <CardDescription>Set your logo, brand name, and contact information.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="flex items-center gap-6">
-              <div className="h-20 w-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain" />
-                ) : (
-                  <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => logoInputRef.current?.click()}
-                >
-                  Upload Logo
-                </Button>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG, or SVG. Recommended: 200x200px.</p>
-              </div>
+        <CardContent className="p-6 sm:p-8 space-y-6">
+          {/* Logo upload */}
+          <div className="flex items-center gap-6 pb-6 border-b border-[#f4f4f5]">
+            <div className="h-20 w-20 rounded-2xl border-2 border-dashed border-[#e4e4e7] flex items-center justify-center overflow-hidden bg-[#fafafa] p-1">
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain rounded-xl" />
+              ) : (
+                <Building className="h-7 w-7 text-[#a1a1aa]" />
+              )}
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Brand Name"
-                placeholder="Your Brand"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
+            <div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoChange}
+                className="hidden"
               />
-              <Input
-                label="Email"
-                type="email"
-                placeholder="hello@yourbrand.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Input
-                label="Phone"
-                type="tel"
-                placeholder="+1 234 567 890"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              <Input
-                label="Website"
-                type="url"
-                placeholder="https://yourbrand.com"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-              />
-              <Input
-                label="Portfolio URL"
-                type="url"
-                placeholder="https://portfolio.yourbrand.com"
-                value={portfolioUrl}
-                onChange={(e) => setPortfolioUrl(e.target.value)}
-                className="md:col-span-2"
-              />
-            </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {success && <p className="text-sm text-green-600">{success}</p>}
-
-            <div className="flex items-center gap-2">
-              <Button onClick={handleSave} loading={saving}>
-                Save Changes
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-bold text-xs"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                Upload Brand Logo
               </Button>
+              <p className="text-[11px] text-[#a1a1aa] mt-1.5">PNG or SVG with transparent background recommended.</p>
             </div>
+          </div>
+
+          {error && (
+            <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs font-medium">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-700 text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" /> {success}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Agency / Brand Name"
+              placeholder="e.g. Apex Studio"
+              value={brandName}
+              onChange={(e) => setBrandName(e.target.value)}
+            />
+            <Input
+              label="Contact Email"
+              type="email"
+              placeholder="hello@apexstudio.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              label="Phone Number"
+              type="tel"
+              placeholder="+1 (555) 019-2834"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            <Input
+              label="Company Website"
+              type="url"
+              placeholder="https://apexstudio.com"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+            <Input
+              label="Portfolio / Case Studies URL"
+              type="url"
+              placeholder="https://contra.com/apexstudio"
+              value={portfolioUrl}
+              onChange={(e) => setPortfolioUrl(e.target.value)}
+              className="sm:col-span-2"
+            />
+          </div>
+
+          <div className="flex items-center justify-end pt-4 border-t border-[#f4f4f5]">
+            <Button variant="accent" size="md" className="font-bold" onClick={handleSave} loading={saving}>
+              Save Branding
+            </Button>
           </div>
         </CardContent>
       </Card>

@@ -1,9 +1,7 @@
 'use client';
 
-import { Plus, Trash2, Check } from 'lucide-react';
+import { Plus, Trash2, Check, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
 import { TimelineMilestone } from '@/types';
 import { generateId } from '@/lib/utils';
 
@@ -13,18 +11,20 @@ interface TimelineProps {
   editable?: boolean;
 }
 
-export function Timeline({ milestones, onChange, editable = true }: TimelineProps) {
+export function Timeline({ milestones = [], onChange, editable = true }: TimelineProps) {
+  const currentMilestones = Array.isArray(milestones) ? milestones : [];
+
   const updateMilestone = (id: string, field: keyof TimelineMilestone, value: string | boolean) => {
-    onChange(milestones.map((m) => (m.id === id ? { ...m, [field]: value } : m)));
+    onChange(currentMilestones.map((m) => (m.id === id ? { ...m, [field]: value } : m)));
   };
 
   const addMilestone = () => {
     onChange([
-      ...milestones,
+      ...currentMilestones,
       {
         id: generateId(),
-        title: '',
-        description: '',
+        title: 'Phase Milestone',
+        description: 'Key deliverables for this phase',
         date: '',
         completed: false,
       },
@@ -32,107 +32,94 @@ export function Timeline({ milestones, onChange, editable = true }: TimelineProp
   };
 
   const removeMilestone = (id: string) => {
-    onChange(milestones.filter((m) => m.id !== id));
+    onChange(currentMilestones.filter((m) => m.id !== id));
   };
 
   return (
-    <div className="space-y-4">
-      <div className="relative">
-        {/* Timeline line */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
-
-        {milestones.map((milestone, index) => (
-          <div key={milestone.id} className="relative flex gap-4 pb-6">
-            {/* Timeline dot */}
-            <div className="relative z-10 flex-shrink-0">
-              <button
+    <div className="space-y-4 rounded-2xl border border-[#e4e4e7] bg-white p-5 shadow-xs">
+      <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#e4e4e7]">
+        {currentMilestones.length === 0 ? (
+          <p className="text-xs text-[#a1a1aa] italic py-2">No milestones added yet. Add project phases below.</p>
+        ) : (
+          currentMilestones.map((milestone, idx) => (
+            <div key={milestone.id} className="relative group">
+              {/* Dot */}
+              <div
                 onClick={() => editable && updateMilestone(milestone.id, 'completed', !milestone.completed)}
-                className={`
-                  w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors
-                  ${milestone.completed
-                    ? 'bg-green-500 border-green-500 text-white'
-                    : 'bg-white border-gray-300 text-gray-400 hover:border-primary'
-                  }
-                  ${editable ? 'cursor-pointer' : 'cursor-default'}
-                `}
+                className={`absolute -left-6 top-1 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  milestone.completed
+                    ? 'bg-[#09090b] border-[#09090b] text-[#d4ff00]'
+                    : 'bg-white border-[#d4d4d8] text-[#71717a] hover:border-[#09090b]'
+                } ${editable ? 'cursor-pointer' : ''}`}
               >
-                {milestone.completed ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <span className="text-xs font-medium">{index + 1}</span>
-                )}
-              </button>
-            </div>
+                {milestone.completed ? <Check className="h-3 w-3 stroke-[3]" /> : <span className="text-[9px] font-bold">{idx + 1}</span>}
+              </div>
 
-            {/* Content */}
-            <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 space-y-2">
-                  {editable ? (
-                    <Input
-                      value={milestone.title}
-                      onChange={(e) => updateMilestone(milestone.id, 'title', e.target.value)}
-                      placeholder="Milestone title"
-                      className="font-medium border-0 px-0 focus-visible:ring-0 h-8"
-                    />
-                  ) : (
-                    <h4 className="font-medium text-gray-900">{milestone.title || 'Untitled Milestone'}</h4>
-                  )}
-
-                  {editable ? (
-                    <Textarea
-                      value={milestone.description}
-                      onChange={(e) => updateMilestone(milestone.id, 'description', e.target.value)}
-                      placeholder="Description (optional)"
-                      className="border-0 px-0 focus-visible:ring-0 min-h-[60px] resize-none text-sm"
-                    />
-                  ) : milestone.description ? (
-                    <p className="text-sm text-gray-600">{milestone.description}</p>
-                  ) : null}
-
-                  <div className="flex items-center gap-2">
+              {/* Milestone Card */}
+              <div className="p-3.5 rounded-xl border border-[#e4e4e7] bg-[#fcfcfd] space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
                     {editable ? (
-                      <Input
-                        type="date"
-                        value={milestone.date}
-                        onChange={(e) => updateMilestone(milestone.id, 'date', e.target.value)}
-                        className="w-40 h-8 text-sm"
+                      <input
+                        type="text"
+                        value={milestone.title}
+                        onChange={(e) => updateMilestone(milestone.id, 'title', e.target.value)}
+                        placeholder="Phase Title"
+                        className="w-full text-xs font-bold text-[#09090b] bg-transparent outline-none border-b border-transparent focus:border-[#09090b]"
                       />
-                    ) : milestone.date ? (
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {new Date(milestone.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </span>
-                    ) : null}
+                    ) : (
+                      <h4 className="text-xs font-bold text-[#09090b]">{milestone.title}</h4>
+                    )}
                   </div>
+                  {editable && (
+                    <button
+                      onClick={() => removeMilestone(milestone.id)}
+                      className="text-[#a1a1aa] hover:text-red-600 transition-colors p-1"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
 
-                {editable && (
-                  <button
-                    onClick={() => removeMilestone(milestone.id)}
-                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                {editable ? (
+                  <textarea
+                    value={milestone.description || ''}
+                    onChange={(e) => updateMilestone(milestone.id, 'description', e.target.value)}
+                    placeholder="Deliverable details and scope..."
+                    className="w-full text-xs text-[#52525b] bg-transparent outline-none resize-none min-h-[44px]"
+                  />
+                ) : (
+                  milestone.description && <p className="text-xs text-[#52525b] leading-relaxed">{milestone.description}</p>
                 )}
+
+                <div className="flex items-center gap-2 pt-1 border-t border-[#f4f4f5]">
+                  <Calendar className="h-3.5 w-3.5 text-[#a1a1aa]" />
+                  {editable ? (
+                    <input
+                      type="date"
+                      value={milestone.date || ''}
+                      onChange={(e) => updateMilestone(milestone.id, 'date', e.target.value)}
+                      className="text-[11px] text-[#52525b] bg-white border border-[#e4e4e7] rounded-md px-2 py-0.5"
+                    />
+                  ) : (
+                    milestone.date && (
+                      <span className="text-[11px] text-[#71717a] font-medium">
+                        {new Date(milestone.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    )
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {editable && (
-        <Button variant="outline" size="sm" onClick={addMilestone}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add Milestone
+        <Button variant="outline" size="sm" onClick={addMilestone} className="font-semibold text-xs gap-1">
+          <Plus className="h-3.5 w-3.5" />
+          Add Phase Milestone
         </Button>
-      )}
-
-      {milestones.length === 0 && !editable && (
-        <p className="text-gray-500 text-center py-4">No milestones defined</p>
       )}
     </div>
   );

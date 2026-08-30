@@ -15,7 +15,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import {
   Bold,
   Italic,
-  Underline,
+  Underline as UnderlineIcon,
   Strikethrough,
   Heading1,
   Heading2,
@@ -33,7 +33,7 @@ import {
   Redo2,
   Palette,
 } from 'lucide-react';
-import { useCallback, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ProposalEditorProps {
@@ -63,11 +63,11 @@ function ToolbarButton({
       disabled={disabled}
       title={title}
       className={cn(
-        'p-1.5 rounded-md transition-colors',
+        'p-1.5 rounded-lg text-xs transition-all cursor-pointer select-none',
         isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-        disabled && 'opacity-40 cursor-not-allowed'
+          ? 'bg-[#09090b] text-white shadow-xs'
+          : 'text-[#52525b] hover:bg-[#f4f4f5] hover:text-[#09090b]',
+        disabled && 'opacity-30 cursor-not-allowed'
       )}
     >
       {children}
@@ -76,249 +76,100 @@ function ToolbarButton({
 }
 
 function ToolbarDivider() {
-  return <div className="w-px h-6 bg-gray-200 mx-1" />;
-}
-
-function ColorPicker({
-  value,
-  onChange,
-  onClose,
-}: {
-  value: string;
-  onChange: (color: string) => void;
-  onClose: () => void;
-}) {
-  const colors = [
-    '#000000', '#434343', '#666666', '#999999',
-    '#ef4444', '#f97316', '#eab308', '#22c55e',
-    '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4',
-  ];
-
-  return (
-    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50">
-      <div className="grid grid-cols-4 gap-1">
-        {colors.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => {
-              onChange(color);
-              onClose();
-            }}
-            className={cn(
-              'w-6 h-6 rounded-md border transition-transform hover:scale-110',
-              value === color ? 'ring-2 ring-primary ring-offset-1' : 'border-gray-200'
-            )}
-            style={{ backgroundColor: color }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LinkDialog({
-  editor,
-  onClose,
-}: {
-  editor: any;
-  onClose: () => void;
-}) {
-  const [url, setUrl] = useState(editor.getAttributes('link').href || '');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (url) {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange('link')
-        .setLink({ href: url, target: '_blank' })
-        .run();
-    }
-    onClose();
-  };
-
-  return (
-    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-72">
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://example.com"
-          className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-          autoFocus
-        />
-        <button
-          type="submit"
-          className="px-3 py-1 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 transition-colors"
-        >
-          Save
-        </button>
-      </form>
-      {editor.getAttributes('link').href && (
-        <button
-          type="button"
-          onClick={() => {
-            editor.chain().focus().extendMarkRange('link').unsetLink().run();
-            onClose();
-          }}
-          className="mt-2 text-xs text-red-600 hover:text-red-700"
-        >
-          Remove link
-        </button>
-      )}
-    </div>
-  );
-}
-
-function ImageDialog({
-  editor,
-  onClose,
-}: {
-  editor: any;
-  onClose: () => void;
-}) {
-  const [url, setUrl] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-    onClose();
-  };
-
-  return (
-    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-50 w-72">
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Image URL"
-          className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-          autoFocus
-        />
-        <button
-          type="submit"
-          className="px-3 py-1 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 transition-colors"
-        >
-          Add
-        </button>
-      </form>
-    </div>
-  );
+  return <div className="w-px h-4 bg-[#e4e4e7] mx-1 shrink-0" />;
 }
 
 export function ProposalEditor({
   content,
   onChange,
-  placeholder = 'Start writing your proposal...',
+  placeholder = 'Write proposal section content here...',
   editable = true,
 }: ProposalEditorProps) {
   const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [showImageDialog, setShowImageDialog] = useState(false);
-  const [showTextColorPicker, setShowTextColorPicker] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
+        heading: { levels: [1, 2, 3] },
       }),
-      Placeholder.configure({
-        placeholder,
-      }),
+      Placeholder.configure({ placeholder }),
       Typography,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TextStyle,
       Color,
-      Highlight.configure({
-        multicolor: true,
-      }),
+      Highlight.configure({ multicolor: true }),
       Link.configure({
         openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary underline hover:text-primary/80',
-        },
+        HTMLAttributes: { class: 'text-[#6366f1] underline font-medium' },
       }),
       Image.configure({
-        HTMLAttributes: {
-          class: 'rounded-lg max-w-full',
-        },
+        HTMLAttributes: { class: 'rounded-xl max-w-full my-3 border border-[#e4e4e7]' },
       }),
       TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
+      TaskItem.configure({ nested: true }),
     ],
-    content,
+    content: typeof content === 'string' ? content : content?.html || content || '',
     editable,
     onUpdate: ({ editor: ed }) => {
-      onChange(ed.getJSON());
+      onChange(ed.getHTML());
     },
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-gray max-w-none min-h-[300px] px-4 py-3',
-          'focus:outline-none',
-          !editable && 'pointer-events-none opacity-75'
+          'prose prose-neutral max-w-none min-h-[140px] px-4 py-3 focus:outline-none text-sm leading-relaxed text-[#18181b]',
+          !editable && 'pointer-events-none opacity-85'
         ),
       },
     },
   });
 
   useEffect(() => {
-    if (editor && content && JSON.stringify(editor.getJSON()) !== JSON.stringify(content)) {
-      editor.commands.setContent(content);
+    if (editor && content) {
+      const currentHtml = editor.getHTML();
+      const newContent = typeof content === 'string' ? content : content?.html || '';
+      if (newContent && currentHtml !== newContent) {
+        editor.commands.setContent(newContent);
+      }
     }
   }, [content, editor]);
 
   if (!editor) {
     return (
-      <div className="border border-gray-200 rounded-lg bg-white min-h-[400px] flex items-center justify-center text-gray-400">
+      <div className="min-h-[120px] p-4 flex items-center justify-center text-xs text-[#a1a1aa]">
         Loading editor...
       </div>
     );
   }
 
+  const colors = ['#09090b', '#4f46e5', '#2563eb', '#059669', '#d97706', '#dc2626'];
+
   return (
-    <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
+    <div className="rounded-2xl border border-[#e4e4e7] bg-white overflow-hidden shadow-xs">
       {editable && (
-        <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-gray-200 bg-gray-50/50">
-          {/* Text Formatting */}
+        <div className="flex flex-wrap items-center gap-1 px-3 py-2 border-b border-[#f4f4f5] bg-[#fafafa]">
+          {/* Text formatting */}
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
-            title="Bold"
+            title="Bold (Ctrl+B)"
           >
-            <Bold className="h-4 w-4" />
+            <Bold className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleItalic().run()}
             isActive={editor.isActive('italic')}
-            title="Italic"
+            title="Italic (Ctrl+I)"
           >
-            <Italic className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            isActive={editor.isActive('underline')}
-            title="Underline"
-          >
-            <Underline className="h-4 w-4" />
+            <Italic className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleStrike().run()}
             isActive={editor.isActive('strike')}
             title="Strikethrough"
           >
-            <Strikethrough className="h-4 w-4" />
+            <Strikethrough className="h-3.5 w-3.5" />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -329,21 +180,21 @@ export function ProposalEditor({
             isActive={editor.isActive('heading', { level: 1 })}
             title="Heading 1"
           >
-            <Heading1 className="h-4 w-4" />
+            <Heading1 className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive('heading', { level: 2 })}
             title="Heading 2"
           >
-            <Heading2 className="h-4 w-4" />
+            <Heading2 className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             isActive={editor.isActive('heading', { level: 3 })}
             title="Heading 3"
           >
-            <Heading3 className="h-4 w-4" />
+            <Heading3 className="h-3.5 w-3.5" />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -354,21 +205,21 @@ export function ProposalEditor({
             isActive={editor.isActive('bulletList')}
             title="Bullet List"
           >
-            <List className="h-4 w-4" />
+            <List className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             isActive={editor.isActive('orderedList')}
-            title="Ordered List"
+            title="Numbered List"
           >
-            <ListOrdered className="h-4 w-4" />
+            <ListOrdered className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleTaskList().run()}
             isActive={editor.isActive('taskList')}
             title="Task List"
           >
-            <ListChecks className="h-4 w-4" />
+            <ListChecks className="h-3.5 w-3.5" />
           </ToolbarButton>
 
           <ToolbarDivider />
@@ -379,102 +230,68 @@ export function ProposalEditor({
             isActive={editor.isActive({ textAlign: 'left' })}
             title="Align Left"
           >
-            <AlignLeft className="h-4 w-4" />
+            <AlignLeft className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             isActive={editor.isActive({ textAlign: 'center' })}
             title="Align Center"
           >
-            <AlignCenter className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            isActive={editor.isActive({ textAlign: 'right' })}
-            title="Align Right"
-          >
-            <AlignRight className="h-4 w-4" />
+            <AlignCenter className="h-3.5 w-3.5" />
           </ToolbarButton>
 
           <ToolbarDivider />
 
-          {/* Link */}
-          <div className="relative">
-            <ToolbarButton
-              onClick={() => {
-                if (editor.isActive('link')) {
-                  editor.chain().focus().extendMarkRange('link').unsetLink().run();
-                } else {
-                  setShowLinkDialog(true);
-                }
-              }}
-              isActive={editor.isActive('link')}
-              title="Insert Link"
-            >
-              <LinkIcon className="h-4 w-4" />
-            </ToolbarButton>
-            {showLinkDialog && (
-              <LinkDialog editor={editor} onClose={() => setShowLinkDialog(false)} />
-            )}
-          </div>
-
-          {/* Image */}
-          <div className="relative">
-            <ToolbarButton
-              onClick={() => setShowImageDialog(true)}
-              title="Insert Image"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </ToolbarButton>
-            {showImageDialog && (
-              <ImageDialog editor={editor} onClose={() => setShowImageDialog(false)} />
-            )}
-          </div>
-
-          <ToolbarDivider />
-
-          {/* Text Color */}
-          <div className="relative">
-            <ToolbarButton
-              onClick={() => setShowTextColorPicker(!showTextColorPicker)}
-              title="Text Color"
-            >
-              <Palette className="h-4 w-4" />
-            </ToolbarButton>
-            {showTextColorPicker && (
-              <ColorPicker
-                value={editor.getAttributes('textStyle').color || '#000000'}
-                onChange={(color) => editor.chain().focus().setColor(color).run()}
-                onClose={() => setShowTextColorPicker(false)}
-              />
-            )}
-          </div>
-
-          {/* Highlight */}
+          {/* Highlight & Colors */}
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHighlight({ color: '#fef08a' }).run()}
+            onClick={() => editor.chain().focus().toggleHighlight({ color: '#d4ff00' }).run()}
             isActive={editor.isActive('highlight')}
             title="Highlight"
           >
-            <Highlighter className="h-4 w-4" />
+            <Highlighter className="h-3.5 w-3.5" />
           </ToolbarButton>
+
+          <div className="relative">
+            <ToolbarButton
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              title="Text Color"
+            >
+              <Palette className="h-3.5 w-3.5" />
+            </ToolbarButton>
+            {showColorPicker && (
+              <div className="absolute top-full left-0 mt-1.5 p-2 bg-white border border-[#e4e4e7] rounded-xl shadow-lg flex gap-1.5 z-30">
+                {colors.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      editor.chain().focus().setColor(c).run();
+                      setShowColorPicker(false);
+                    }}
+                    className="h-5 w-5 rounded-full border border-black/10 hover:scale-110 transition-transform cursor-pointer"
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           <ToolbarDivider />
 
-          {/* Undo/Redo */}
+          {/* Undo / Redo */}
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
             disabled={!editor.can().undo()}
             title="Undo"
           >
-            <Undo2 className="h-4 w-4" />
+            <Undo2 className="h-3.5 w-3.5" />
           </ToolbarButton>
           <ToolbarButton
             onClick={() => editor.chain().focus().redo().run()}
             disabled={!editor.can().redo()}
             title="Redo"
           >
-            <Redo2 className="h-4 w-4" />
+            <Redo2 className="h-3.5 w-3.5" />
           </ToolbarButton>
         </div>
       )}

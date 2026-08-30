@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -22,7 +21,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     setMounted(true);
     const saved = localStorage.getItem('sidebarCollapsed');
     if (saved !== null) {
-      setSidebarCollapsed(JSON.parse(saved));
+      try {
+        setSidebarCollapsed(JSON.parse(saved));
+      } catch {
+        // ignore
+      }
     }
   }, []);
 
@@ -40,26 +43,27 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   if (!mounted || loading || !user) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-gray-200" />
-        <div className="fixed top-0 right-0 z-30 h-16 bg-white border-b border-gray-200 left-64" />
-        <main className="pt-16 lg:pl-64 min-h-screen" />
+      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-3 border-[#09090b] border-t-[#d4ff00] animate-spin" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-[#71717a]">Loading Studio...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fcfcfd] text-[#09090b]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       <Header sidebarCollapsed={sidebarCollapsed} />
       <main
         className={cn(
-          'pt-16 min-h-screen transition-all duration-200 bg-gray-50',
-          sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64'
+          'pt-18 min-h-screen transition-all duration-300 bg-[#fcfcfd]',
+          sidebarCollapsed ? 'lg:pl-18' : 'lg:pl-64'
         )}
         role="main"
       >
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
           {children}
         </div>
       </main>

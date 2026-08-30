@@ -5,10 +5,24 @@ import { useAuth } from '@/context/AuthContext';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Client } from '@/types';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import { Avatar } from '@/components/ui/Avatar';
 import { formatDate } from '@/lib/utils';
+import {
+  Users,
+  Plus,
+  Search,
+  Mail,
+  Phone,
+  MapPin,
+  Trash2,
+  Edit2,
+  Building,
+  ExternalLink,
+  Check,
+} from 'lucide-react';
 
 const EMPTY_FORM = { name: '', company: '', email: '', phone: '', address: '', notes: '' };
 
@@ -34,7 +48,7 @@ export default function ClientsPage() {
     setLoading(true);
     try {
       const data = await firestoreHelpers.getClients(user.uid);
-      setClients(data);
+      setClients(data || []);
     } catch (err) {
       console.error('Failed to load clients:', err);
     } finally {
@@ -68,12 +82,12 @@ export default function ClientsPage() {
 
   const openEdit = (client: Client) => {
     setForm({
-      name: client.name,
-      company: client.company,
-      email: client.email,
-      phone: client.phone,
-      address: client.address,
-      notes: client.notes,
+      name: client.name || '',
+      company: client.company || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      address: client.address || '',
+      notes: client.notes || '',
     });
     setEditingId(client.id);
     setShowForm(true);
@@ -100,7 +114,7 @@ export default function ClientsPage() {
       resetForm();
     } catch (err) {
       console.error('Failed to save client:', err);
-      setError('Failed to save client. Please try again.');
+      setError('Failed to save client.');
     } finally {
       setSaving(false);
     }
@@ -122,156 +136,211 @@ export default function ClientsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-3 border-[#09090b] border-t-[#d4ff00] animate-spin" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-[#71717a]">Loading Directory...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
-          <p className="text-gray-500 mt-1">Manage your client directory.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#09090b] tracking-tight">Clients Directory</h1>
+          <p className="text-sm text-[#71717a] mt-1">Manage client companies, contact details, and histories.</p>
         </div>
-        <Button onClick={openAdd}>Add Client</Button>
+        <Button variant="accent" size="md" className="font-bold" onClick={openAdd}>
+          <Plus className="h-4 w-4 mr-1.5 stroke-[2.5]" />
+          Add Client
+        </Button>
       </div>
 
+      {/* Search Bar */}
       {clients.length > 0 && (
-        <Input
-          placeholder="Search clients by name, company, email, or phone..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="relative max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
+          <input
+            type="text"
+            placeholder="Search by name, company, email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-xs font-medium rounded-full border border-[#e4e4e7] bg-white focus:outline-none focus:ring-2 focus:ring-[#09090b]/10 focus:border-[#09090b] transition-all"
+          />
+        </div>
       )}
 
+      {/* Add / Edit Client Modal */}
       {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{editingId ? 'Edit Client' : 'New Client'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Name"
-                placeholder="John Doe"
-                value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                error={error && !form.name.trim() ? 'Required' : undefined}
-              />
-              <Input
-                label="Company"
-                placeholder="Acme Inc."
-                value={form.company}
-                onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
-              />
-              <Input
-                label="Email"
-                type="email"
-                placeholder="john@acme.com"
-                value={form.email}
-                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-              />
-              <Input
-                label="Phone"
-                type="tel"
-                placeholder="+1 234 567 890"
-                value={form.phone}
-                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-              />
-              <Input
-                label="Address"
-                placeholder="123 Main St, City, Country"
-                value={form.address}
-                onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-                className="md:col-span-2"
-              />
-              <Textarea
-                label="Notes"
-                placeholder="Any additional notes about this client..."
-                value={form.notes}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
-                className="md:col-span-2"
-              />
-            </div>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-            <div className="flex items-center gap-2 mt-4">
-              <Button onClick={handleSave} loading={saving}>
-                {editingId ? 'Update' : 'Create'}
-              </Button>
-              <Button variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" onClick={resetForm}>
+          <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <Card className="shadow-2xl border-[#e4e4e7] overflow-hidden">
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-[#09090b] mb-1">
+                  {editingId ? 'Edit Client Profile' : 'Add New Client'}
+                </h3>
+                <p className="text-xs text-[#71717a] mb-5">Configure client company details and contact channels.</p>
 
-      {clients.length === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No clients yet</h3>
-          <p className="mt-1 text-sm text-gray-500">Add your first client to get started.</p>
-          <div className="mt-6">
-            <Button onClick={openAdd}>Add Client</Button>
+                {error && (
+                  <div className="p-3 mb-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
+                    {error}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Contact Person Name *"
+                      placeholder="Jordan Miller"
+                      value={form.name}
+                      onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                    />
+                    <Input
+                      label="Company Name"
+                      placeholder="Acme Corporation"
+                      value={form.company}
+                      onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Email Address"
+                      type="email"
+                      placeholder="jordan@acme.com"
+                      value={form.email}
+                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                    />
+                    <Input
+                      label="Phone Number"
+                      type="tel"
+                      placeholder="+1 (555) 234-5678"
+                      value={form.phone}
+                      onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    />
+                  </div>
+
+                  <Input
+                    label="Physical Address / Location"
+                    placeholder="742 Evergreen Terrace, San Francisco, CA"
+                    value={form.address}
+                    onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+                  />
+
+                  <Textarea
+                    label="Client Notes"
+                    placeholder="Key project interests, communication preferences, previous proposals..."
+                    value={form.notes}
+                    onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-5 mt-2 border-t border-[#f4f4f5]">
+                  <Button variant="outline" size="sm" onClick={resetForm}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={handleSave} loading={saving} className="font-bold">
+                    {editingId ? 'Update Client' : 'Save Client'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
+      )}
+
+      {/* Clients Grid */}
+      {clients.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-3xl border border-[#e4e4e7] p-8">
+          <div className="h-14 w-14 rounded-2xl bg-[#f4f4f5] text-[#09090b] flex items-center justify-center mx-auto mb-4">
+            <Users className="h-7 w-7" />
+          </div>
+          <h3 className="text-base font-bold text-[#09090b]">No clients added yet</h3>
+          <p className="text-xs text-[#71717a] mt-1 max-w-sm mx-auto">
+            Build your CRM directory to quickly auto-populate proposal details and client scopes.
+          </p>
+          <Button variant="accent" size="md" className="mt-6 font-bold" onClick={openAdd}>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add First Client
+          </Button>
+        </div>
       ) : filteredClients.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <p className="text-sm">No clients match &ldquo;{search}&rdquo;.</p>
+        <div className="text-center py-16 bg-white rounded-3xl border border-[#e4e4e7] text-[#71717a]">
+          <p className="text-sm font-medium">No clients matching &ldquo;{search}&rdquo;</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredClients.map((client) => (
-            <Card key={client.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base">{client.name}</CardTitle>
+            <Card key={client.id} hoverEffect className="flex flex-col justify-between overflow-hidden">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar fallback={client.name} size="md" />
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-[#09090b] truncate">{client.name}</h3>
+                      {client.company && (
+                        <p className="text-xs text-[#71717a] truncate font-medium flex items-center gap-1">
+                          <Building className="h-3 w-3" /> {client.company}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(client)}>
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      loading={deletingId === client.id}
-                      onClick={() => handleDelete(client.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    <button
+                      onClick={() => openEdit(client)}
+                      className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-[#09090b] hover:bg-[#f4f4f5] transition-colors cursor-pointer"
+                      title="Edit client"
                     >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </Button>
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(client.id)}
+                      className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Delete client"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
-                {client.company && (
-                  <p className="text-sm text-gray-500">{client.company}</p>
-                )}
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-1 text-sm text-gray-600">
+
+                <div className="space-y-2 pt-3 border-t border-[#f4f4f5] text-xs text-[#52525b]">
                   {client.email && (
                     <div className="flex items-center gap-2">
-                      <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <span className="truncate">{client.email}</span>
+                      <Mail className="h-3.5 w-3.5 text-[#a1a1aa] shrink-0" />
+                      <a href={`mailto:${client.email}`} className="truncate hover:underline text-[#09090b]">
+                        {client.email}
+                      </a>
                     </div>
                   )}
                   {client.phone && (
                     <div className="flex items-center gap-2">
-                      <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span>{client.phone}</span>
+                      <Phone className="h-3.5 w-3.5 text-[#a1a1aa] shrink-0" />
+                      <a href={`tel:${client.phone}`} className="truncate hover:underline">
+                        {client.phone}
+                      </a>
+                    </div>
+                  )}
+                  {client.address && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-[#a1a1aa] shrink-0" />
+                      <span className="truncate text-[#71717a]">{client.address}</span>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-gray-400 mt-3">Added {formatDate(client.createdAt)}</p>
+
+                {client.notes && (
+                  <p className="text-[11px] text-[#71717a] bg-[#f4f4f5] p-2.5 rounded-xl line-clamp-2 italic">
+                    &ldquo;{client.notes}&rdquo;
+                  </p>
+                )}
+
+                <div className="text-[10px] text-[#a1a1aa] pt-1">
+                  Added {formatDate(client.createdAt)}
+                </div>
               </CardContent>
             </Card>
           ))}

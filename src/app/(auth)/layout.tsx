@@ -1,66 +1,75 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { FileText, Zap, Shield, BarChart3 } from 'lucide-react';
+import { Sparkles, Check, Shield, Eye, DollarSign } from 'lucide-react';
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex">
-      {/* Left side — branding */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[45%] relative bg-gradient-to-br from-primary via-blue-600 to-indigo-700 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDJ2LTJoMzRtMC04djJIMnYyaDM0bTAtMTZ2MkgzdjJoMzRtMC04djJIMXYyaDM0Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-40" />
-        
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 w-fit">
-            <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <FileText className="h-6 w-6 text-white" />
+    <div className="min-h-screen flex bg-[#fcfcfd]">
+      {/* Left side — Obsidian Contra Branding */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[48%] relative bg-[#09090b] text-white overflow-hidden p-12 flex-col justify-between border-r border-black/10">
+        {/* Glow backdrop */}
+        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 rounded-full bg-[#d4ff00]/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-96 h-96 rounded-full bg-[#6366f1]/15 blur-3xl pointer-events-none" />
+
+        {/* Brand Header */}
+        <div className="relative z-10">
+          <Link href="/" className="flex items-center gap-2.5 w-fit">
+            <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-[#d4ff00]">
+              <Sparkles className="h-5 w-5 fill-[#d4ff00]" />
             </div>
-            <span className="text-xl font-bold text-white">ProposalGen</span>
+            <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1">
+              ProposalGen
+              <span className="h-2 w-2 rounded-full bg-[#d4ff00]" />
+            </span>
           </Link>
+        </div>
 
-          {/* Content */}
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
-                Create proposals
-                <br />
-                that win clients.
-              </h1>
-              <p className="mt-4 text-lg text-white/80 max-w-md">
-                Professional proposal builder for freelancers and teams. Create, share, and track proposals with ease.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {[
-                { icon: Zap, text: 'AI-powered proposal generation' },
-                { icon: Shield, text: 'Secure sharing with analytics' },
-                { icon: BarChart3, text: 'Track views and responses' },
-              ].map((feature) => (
-                <div key={feature.text} className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center">
-                    <feature.icon className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-sm text-white/90">{feature.text}</span>
-                </div>
-              ))}
-            </div>
+        {/* Value Proposition */}
+        <div className="relative z-10 space-y-8 my-auto max-w-md">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-[#d4ff00] border border-white/10">
+            <span>⚡ Close deals 2x faster</span>
           </div>
 
-          {/* Footer */}
-          <p className="text-sm text-white/50">&copy; 2026 ProposalGen. All rights reserved.</p>
+          <h2 className="text-3xl xl:text-4xl font-extrabold tracking-tight leading-tight text-white">
+            Pitch like a top-tier agency. Close like a pro.
+          </h2>
+
+          <p className="text-sm text-neutral-400 leading-relaxed">
+            ProposalGen gives independent creators and freelancers an unfair advantage with modern interactive proposals, smart pricing tables, and live view tracking.
+          </p>
+
+          <div className="space-y-3 pt-2">
+            {[
+              { text: 'Interactive digital sign-off from any device' },
+              { text: 'Gemini AI assistant for lightning-fast drafting' },
+              { text: 'Live view analytics with instant notifications' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 text-xs text-neutral-300 font-medium">
+                <div className="h-5 w-5 rounded-full bg-[#d4ff00]/15 text-[#d4ff00] flex items-center justify-center shrink-0">
+                  <Check className="h-3.5 w-3.5 stroke-[3]" />
+                </div>
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="relative z-10 flex items-center justify-between text-xs text-neutral-500 pt-6 border-t border-white/10">
+          <span>© 2026 ProposalGen Inc.</span>
+          <span className="text-neutral-400">Trusted by 25k+ Creators</span>
         </div>
       </div>
 
-      {/* Right side — form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gray-50">
+      {/* Right side — Form Container */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-12">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-              <FileText className="h-6 w-6 text-white" />
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex items-center gap-2.5 mb-8 justify-center">
+            <div className="h-9 w-9 rounded-xl bg-[#09090b] flex items-center justify-center text-[#d4ff00]">
+              <Sparkles className="h-5 w-5 fill-[#d4ff00]" />
             </div>
-            <span className="text-xl font-bold text-gray-900">ProposalGen</span>
+            <span className="text-xl font-bold tracking-tight text-[#09090b]">ProposalGen</span>
           </div>
 
           {children}

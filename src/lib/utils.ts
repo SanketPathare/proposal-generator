@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
 }
 
 export function generateShareId(): string {
@@ -18,19 +18,24 @@ export function generateShareId(): string {
   return result;
 }
 
-export function formatCurrency(amount: number, currency: string = 'INR'): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency || '$'} ${amount.toLocaleString()}`;
+  }
 }
 
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('en-IN', {
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -40,7 +45,8 @@ export function formatDate(date: Date | string | null | undefined): string {
 export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  return new Intl.DateTimeFormat('en-IN', {
+  if (isNaN(d.getTime())) return '';
+  return new Intl.DateTimeFormat('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -49,16 +55,51 @@ export function formatDateTime(date: Date | string | null | undefined): string {
   }).format(d);
 }
 
+export function getStatusBadgeStyle(status: string): { bg: string; text: string; dot: string } {
+  switch (status?.toLowerCase()) {
+    case 'accepted':
+      return {
+        bg: 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20',
+        text: 'text-emerald-700 font-semibold',
+        dot: 'bg-emerald-500',
+      };
+    case 'viewed':
+      return {
+        bg: 'bg-indigo-500/10 text-indigo-700 border border-indigo-500/20',
+        text: 'text-indigo-700 font-semibold',
+        dot: 'bg-indigo-500',
+      };
+    case 'sent':
+      return {
+        bg: 'bg-sky-500/10 text-sky-700 border border-sky-500/20',
+        text: 'text-sky-700 font-semibold',
+        dot: 'bg-sky-500',
+      };
+    case 'rejected':
+      return {
+        bg: 'bg-rose-500/10 text-rose-700 border border-rose-500/20',
+        text: 'text-rose-700 font-semibold',
+        dot: 'bg-rose-500',
+      };
+    case 'expired':
+      return {
+        bg: 'bg-amber-500/10 text-amber-700 border border-amber-500/20',
+        text: 'text-amber-700 font-semibold',
+        dot: 'bg-amber-500',
+      };
+    case 'draft':
+    default:
+      return {
+        bg: 'bg-neutral-500/10 text-neutral-700 border border-neutral-500/20',
+        text: 'text-neutral-700 font-semibold',
+        dot: 'bg-neutral-400',
+      };
+  }
+}
+
 export function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
-    viewed: 'bg-purple-100 text-purple-800',
-    accepted: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-    expired: 'bg-orange-100 text-orange-800',
-  };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  const styles = getStatusBadgeStyle(status);
+  return styles.bg;
 }
 
 export function getStatusLabel(status: string): string {
@@ -67,10 +108,10 @@ export function getStatusLabel(status: string): string {
     sent: 'Sent',
     viewed: 'Viewed',
     accepted: 'Accepted',
-    rejected: 'Rejected',
+    rejected: 'Declined',
     expired: 'Expired',
   };
-  return labels[status] || status;
+  return labels[status?.toLowerCase()] || status || 'Draft';
 }
 
 export function debounce<T extends (...args: any[]) => any>(fn: T, ms: number): (...args: Parameters<T>) => void {
@@ -81,31 +122,11 @@ export function debounce<T extends (...args: any[]) => any>(fn: T, ms: number): 
   };
 }
 
-export function throttle<T extends (...args: any[]) => any>(fn: T, ms: number): (...args: Parameters<T>) => void {
-  let lastCall = 0;
-  return (...args: Parameters<T>) => {
-    const now = Date.now();
-    if (now - lastCall >= ms) {
-      lastCall = now;
-      fn(...args);
-    }
-  };
-}
-
 export function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-export function omit<T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
-  const result = { ...obj };
-  keys.forEach(key => delete result[key]);
-  return result;
-}
-
-export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
-  const result = {} as Pick<T, K>;
-  keys.forEach(key => {
-    if (key in obj) result[key] = obj[key];
-  });
-  return result;
+  if (obj === null || typeof obj !== 'object') return obj;
+  try {
+    return JSON.parse(JSON.stringify(obj));
+  } catch {
+    return { ...obj };
+  }
 }

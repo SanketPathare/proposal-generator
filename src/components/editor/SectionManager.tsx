@@ -38,31 +38,27 @@ import {
   Star,
   MessageSquare,
   Phone,
-  Image,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProposalSection, SectionType } from '@/types';
 import { generateId, cn } from '@/lib/utils';
 
-const sectionTypes: { type: SectionType; label: string; icon: any; description: string }[] = [
-  { type: 'cover', label: 'Cover Page', icon: Layout, description: 'Title & intro' },
-  { type: 'introduction', label: 'Introduction', icon: FileText, description: 'Opening section' },
-  { type: 'about_me', label: 'About Me', icon: Users, description: 'Your background' },
-  { type: 'requirements', label: 'Requirements', icon: Target, description: 'Client needs' },
-  { type: 'overview', label: 'Project Overview', icon: FileText, description: 'Project summary' },
-  { type: 'scope', label: 'Scope of Work', icon: Briefcase, description: 'Work details' },
-  { type: 'features', label: 'Features', icon: CheckSquare, description: 'Feature list' },
-  { type: 'deliverables', label: 'Deliverables', icon: CheckSquare, description: 'What you deliver' },
-  { type: 'timeline', label: 'Timeline', icon: Calendar, description: 'Project schedule' },
-  { type: 'pricing', label: 'Pricing', icon: DollarSign, description: 'Cost breakdown' },
-  { type: 'terms', label: 'Terms & Conditions', icon: Scale, description: 'Legal terms' },
-  { type: 'payment_terms', label: 'Payment Terms', icon: CreditCard, description: 'Payment info' },
-  { type: 'portfolio', label: 'Portfolio', icon: Image, description: 'Past work' },
-  { type: 'testimonials', label: 'Testimonials', icon: Star, description: 'Client reviews' },
-  { type: 'conclusion', label: 'Conclusion', icon: MessageSquare, description: 'Closing section' },
-  { type: 'contact', label: 'Contact', icon: Phone, description: 'Contact info' },
-  { type: 'paragraph', label: 'Paragraph', icon: FileText, description: 'Custom text' },
-  { type: 'heading', label: 'Heading', icon: FileText, description: 'Section heading' },
+export const SECTION_TYPE_DETAILS: { type: SectionType; label: string; icon: any; description: string }[] = [
+  { type: 'cover', label: 'Cover Page', icon: Layout, description: 'Header & Title' },
+  { type: 'introduction', label: 'Introduction', icon: FileText, description: 'Executive summary' },
+  { type: 'about_me', label: 'About Us / Creator', icon: Users, description: 'Credentials & bio' },
+  { type: 'requirements', label: 'Client Needs', icon: Target, description: 'Requirements scope' },
+  { type: 'overview', label: 'Project Overview', icon: FileText, description: 'Objectives & approach' },
+  { type: 'scope', label: 'Scope of Work', icon: Briefcase, description: 'Key services' },
+  { type: 'features', label: 'Features & Specs', icon: CheckSquare, description: 'Technical specs' },
+  { type: 'deliverables', label: 'Deliverables', icon: CheckSquare, description: 'Tangible outputs' },
+  { type: 'timeline', label: 'Project Timeline', icon: Calendar, description: 'Milestones & dates' },
+  { type: 'pricing', label: 'Investment & Pricing', icon: DollarSign, description: 'Pricing calculator' },
+  { type: 'terms', label: 'Terms & Conditions', icon: Scale, description: 'Legal & IP terms' },
+  { type: 'payment_terms', label: 'Payment Terms', icon: CreditCard, description: 'Deposit & schedule' },
+  { type: 'testimonials', label: 'Testimonials', icon: Star, description: 'Social proof' },
+  { type: 'conclusion', label: 'Closing & Next Steps', icon: MessageSquare, description: 'Call to action' },
+  { type: 'contact', label: 'Contact Details', icon: Phone, description: 'Get in touch' },
 ];
 
 interface SortableSectionProps {
@@ -77,7 +73,7 @@ interface SortableSectionProps {
   onDelete: () => void;
 }
 
-function SortableSection({
+function SortableSectionItem({
   section,
   index,
   totalSections,
@@ -93,69 +89,80 @@ function SortableSection({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 10 : 'auto',
+    zIndex: isDragging ? 20 : 'auto',
   };
 
-  const typeInfo = sectionTypes.find((t) => t.type === section.type);
+  const typeInfo = SECTION_TYPE_DETAILS.find((t) => t.type === section.type);
   const Icon = typeInfo?.icon || FileText;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        'flex items-center gap-2 p-3 rounded-lg border transition-all',
-        isDragging ? 'shadow-lg opacity-80' : '',
-        isActive
-          ? 'border-primary bg-primary/5 ring-1 ring-primary'
-          : 'border-gray-200 bg-white hover:border-gray-300'
-      )}
       onClick={onSelect}
+      className={cn(
+        'group flex items-center gap-2 p-2.5 rounded-xl border text-xs transition-all cursor-pointer select-none',
+        isDragging && 'shadow-lg opacity-85 border-[#09090b]',
+        isActive
+          ? 'border-[#09090b] bg-[#09090b] text-white shadow-xs font-semibold'
+          : 'border-[#e4e4e7] bg-white text-[#09090b] hover:border-[#d4d4d8] hover:bg-[#fafafa]'
+      )}
     >
       <button
-        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+        className={cn(
+          'cursor-grab active:cursor-grabbing p-1 rounded transition-colors touch-none',
+          isActive ? 'text-neutral-400 hover:text-white' : 'text-[#a1a1aa] hover:text-[#09090b]'
+        )}
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-3.5 w-3.5" />
       </button>
 
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        <div className="h-6 w-6 rounded flex items-center justify-center bg-gray-100 flex-shrink-0">
-          <Icon className="h-3.5 w-3.5 text-gray-600" />
+        <div
+          className={cn(
+            'h-6 w-6 rounded-lg flex items-center justify-center shrink-0',
+            isActive ? 'bg-white/15 text-[#d4ff00]' : 'bg-[#f4f4f5] text-[#09090b]'
+          )}
+        >
+          <Icon className="h-3.5 w-3.5" />
         </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{section.title || typeInfo?.label}</p>
-          <p className="text-xs text-gray-500">{typeInfo?.description}</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold truncate leading-tight">{section.title || typeInfo?.label}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-0.5 flex-shrink-0">
+      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
           disabled={index === 0}
-          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          className={cn('p-1 rounded hover:bg-black/10 disabled:opacity-20 cursor-pointer', isActive && 'hover:bg-white/20')}
+          title="Move up"
         >
-          <ChevronUp className="h-3.5 w-3.5" />
+          <ChevronUp className="h-3 w-3" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
           disabled={index === totalSections - 1}
-          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          className={cn('p-1 rounded hover:bg-black/10 disabled:opacity-20 cursor-pointer', isActive && 'hover:bg-white/20')}
+          title="Move down"
         >
-          <ChevronDown className="h-3.5 w-3.5" />
+          <ChevronDown className="h-3 w-3" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-          className="p-1 text-gray-400 hover:text-blue-600"
+          className={cn('p-1 rounded hover:bg-black/10 text-indigo-400 cursor-pointer', isActive && 'hover:bg-white/20')}
+          title="Duplicate section"
         >
-          <Copy className="h-3.5 w-3.5" />
+          <Copy className="h-3 w-3" />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-1 text-gray-400 hover:text-red-600"
+          className={cn('p-1 rounded hover:bg-black/10 text-rose-400 cursor-pointer', isActive && 'hover:bg-white/20')}
+          title="Delete section"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </button>
       </div>
     </div>
@@ -188,19 +195,24 @@ export function SectionManager({ sections, onChange, activeSectionId, onSelectSe
   };
 
   const addSection = (type: SectionType) => {
-    const typeInfo = sectionTypes.find((t) => t.type === type);
+    const typeInfo = SECTION_TYPE_DETAILS.find((t) => t.type === type);
     const newSection: ProposalSection = {
       id: generateId(),
       type,
       title: typeInfo?.label || 'New Section',
-      content: type === 'pricing' ? { rows: [], subtotal: 0, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 0, currency: 'INR' }
-        : type === 'timeline' ? []
-        : type === 'cover' ? { title: '', subtitle: '' }
-        : '',
+      content:
+        type === 'pricing'
+          ? { rows: [], subtotal: 0, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 0, currency: 'USD' }
+          : type === 'timeline'
+          ? []
+          : type === 'cover'
+          ? { title: 'Proposal Title', subtitle: 'Prepared for Client' }
+          : '',
       order: sections.length,
     };
     onChange([...sections, newSection]);
     setShowAddMenu(false);
+    onSelectSection?.(newSection.id);
   };
 
   const moveSection = (index: number, direction: 'up' | 'down') => {
@@ -225,22 +237,18 @@ export function SectionManager({ sections, onChange, activeSectionId, onSelectSe
   };
 
   const deleteSection = (index: number) => {
-    if (!confirm('Delete this section?')) return;
+    if (!confirm('Are you sure you want to remove this section?')) return;
     const updated = sections.filter((_, i) => i !== index);
     onChange(updated.map((s, i) => ({ ...s, order: i })));
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-700">Sections ({sections.length})</h3>
-      </div>
-
+    <div className="space-y-3">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {sections.map((section, index) => (
-              <SortableSection
+              <SortableSectionItem
                 key={section.id}
                 section={section}
                 index={index}
@@ -257,34 +265,37 @@ export function SectionManager({ sections, onChange, activeSectionId, onSelectSe
         </SortableContext>
       </DndContext>
 
-      {/* Add Section */}
-      <div className="relative">
+      {/* Add Section Button & Popover */}
+      <div className="relative pt-1">
         <Button
           variant="outline"
           size="sm"
-          className="w-full"
+          className="w-full font-bold text-xs border-dashed gap-1.5"
           onClick={() => setShowAddMenu(!showAddMenu)}
         >
-          <Plus className="h-4 w-4 mr-1" />
-          Add Section
+          <Plus className="h-3.5 w-3.5" />
+          Add Section Block
         </Button>
 
         {showAddMenu && (
-          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-            {sectionTypes.map((type) => {
+          <div className="absolute left-0 right-0 z-30 mt-2 bg-white border border-[#e4e4e7] rounded-2xl shadow-xl max-h-80 overflow-y-auto p-1.5 animate-in fade-in-0 zoom-in-95 duration-150">
+            <div className="px-3 py-1.5 border-b border-[#f4f4f5] mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#71717a]">Choose Block Type</span>
+            </div>
+            {SECTION_TYPE_DETAILS.map((type) => {
               const Icon = type.icon;
               return (
                 <button
                   key={type.type}
                   onClick={() => addSection(type.type)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left rounded-xl hover:bg-[#f4f4f5] transition-colors cursor-pointer"
                 >
-                  <div className="h-8 w-8 rounded flex items-center justify-center bg-gray-100">
-                    <Icon className="h-4 w-4 text-gray-600" />
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-[#09090b] text-[#d4ff00] shrink-0">
+                    <Icon className="h-3.5 w-3.5" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{type.label}</p>
-                    <p className="text-xs text-gray-500">{type.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-[#09090b]">{type.label}</p>
+                    <p className="text-[11px] text-[#71717a] truncate">{type.description}</p>
                   </div>
                 </button>
               );
