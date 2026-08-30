@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if user owns the resource
+    function isResourceOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection - users can only access their own document
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Profile subcollection
+      match /profiles/{profileId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Branding subcollection
+      match /branding/{brandingId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Settings subcollection
+      match /settings/{settingsId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Clients subcollection
+      match /clients/{clientId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Proposals subcollection
+      match /proposals/{proposalId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Templates subcollection
+      match /templates/{templateId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Saved content subcollection
+      match /savedContent/{contentId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Media references subcollection
+      match /media/{mediaId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Public templates - read only for everyone
+    match /templates/public/{templateId} {
+      allow read: if true;
+      allow write: if false; // Only admin can write via Admin SDK
+    }
+    
+    // Public proposals via shareId - read only with valid shareId
+    match /proposals/{proposalId} {
+      allow read: if resource.data.shareId == request.query.shareId;
+    }
+    
+    // Shared proposals collection (for tracking)
+    match /sharedProposals/{shareId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+  }
+}
