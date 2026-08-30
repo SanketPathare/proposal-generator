@@ -55,18 +55,28 @@ export default function SharedProposalPage() {
           body: JSON.stringify({ shareId }),
         });
 
-        if (!response.ok) throw new Error('Proposal not found');
-
         const data = await response.json();
+
+        if (!response.ok) {
+          if (data?.error === 'server_misconfigured') {
+            setError('This app is not fully configured yet. Firebase Admin credentials are missing.');
+          } else if (data?.error === 'not_found') {
+            setError('This proposal link is invalid or has been removed.');
+          } else {
+            setError(data?.message || 'Something went wrong loading this proposal.');
+          }
+          return;
+        }
+
         if (data?.proposal) {
           setProposal(data.proposal);
           setStatus(data.proposal.status || 'sent');
         } else {
-          throw new Error('Proposal not found');
+          setError('Proposal data is empty or malformed.');
         }
       } catch (err) {
         console.error('Shared proposal load error:', err);
-        setError('This proposal could not be found or the link has expired.');
+        setError('Unable to load the proposal. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -134,7 +144,7 @@ export default function SharedProposalPage() {
           <div className="h-12 w-12 rounded-2xl bg-[#f4f4f5] text-[#09090b] flex items-center justify-center mx-auto mb-4">
             <Sparkles className="h-6 w-6" />
           </div>
-          <h1 className="text-xl font-bold text-[#09090b]">Proposal Link Expired</h1>
+          <h1 className="text-xl font-bold text-[#09090b]">Proposal Unavailable</h1>
           <p className="text-xs text-[#71717a] mt-2 mb-6 leading-relaxed">
             {error || 'This proposal could not be loaded.'}
           </p>

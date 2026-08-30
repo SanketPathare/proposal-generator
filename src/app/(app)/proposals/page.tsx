@@ -230,11 +230,13 @@ export default function ProposalsPage() {
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-base text-[#09090b] truncate group-hover:text-[#6366f1] transition-colors">
-                        {proposal.title || 'Untitled Proposal'}
+                        {proposal.title || <span className="italic text-[#a1a1aa]">Untitled</span>}
                       </h3>
-                      <p className="text-xs text-[#71717a] truncate mt-0.5">
-                        {proposal.purpose || 'No description provided'}
-                      </p>
+                      {proposal.purpose && (
+                        <p className="text-xs text-[#71717a] truncate mt-0.5">
+                          {proposal.purpose}
+                        </p>
+                      )}
                     </div>
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${badge.bg}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
@@ -263,14 +265,14 @@ export default function ProposalsPage() {
                   )}
 
                   {/* Metrics Badge Row */}
-                  <div className="flex items-center gap-3 text-xs text-[#71717a] my-5 pt-3 border-t border-[#f4f4f5]">
-                    <span className="flex items-center gap-1 font-medium">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-[#71717a] my-4 pt-3 border-t border-[#f4f4f5]">
+                    <span className="flex items-center gap-1 font-semibold text-[#52525b]">
                       <Eye className="h-3.5 w-3.5 text-[#a1a1aa]" />
-                      {proposal.viewCount || 0} views
+                      <span className="text-[#09090b] font-bold">{proposal.viewCount || 0}</span> views
                     </span>
-                    <span>•</span>
+                    <span className="text-[#d4d4d8]">•</span>
                     <span>{proposal.sections?.length || 0} sections</span>
-                    <span>•</span>
+                    <span className="text-[#d4d4d8]">•</span>
                     <span>{formatDate(proposal.updatedAt)}</span>
                   </div>
 
@@ -282,8 +284,20 @@ export default function ProposalsPage() {
                       className="flex-1 font-bold text-xs"
                       onClick={() => router.push(`/proposals/${proposal.id}`)}
                     >
-                      Open Editor
+                      Edit
                     </Button>
+
+                    {proposal.shareId && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(`/shared/${proposal.shareId}`, '_blank')}
+                        title="Preview proposal as client"
+                        className="px-2.5"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
 
                     {proposal.shareId && (
                       <Button
@@ -338,8 +352,12 @@ export default function ProposalsPage() {
                   return (
                     <tr key={proposal.id} className="hover:bg-[#fcfcfd] transition-colors">
                       <td className="py-4 px-6">
-                        <p className="font-bold text-sm text-[#09090b] truncate max-w-xs">{proposal.title || 'Untitled'}</p>
-                        <p className="text-xs text-[#71717a] truncate max-w-xs">{proposal.purpose}</p>
+                        <p className="font-bold text-sm text-[#09090b] truncate max-w-xs">
+                          {proposal.title || <span className="italic text-[#a1a1aa]">Untitled</span>}
+                        </p>
+                        {proposal.purpose && (
+                          <p className="text-xs text-[#71717a] truncate max-w-xs">{proposal.purpose}</p>
+                        )}
                       </td>
                       <td className="py-4 px-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.bg}`}>
@@ -376,7 +394,19 @@ export default function ProposalsPage() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => window.open(`/shared/${proposal.shareId}`, '_blank')}
+                              title="Preview as client"
+                              className="text-xs font-semibold flex items-center gap-1"
+                            >
+                              <Eye className="h-3.5 w-3.5" /> Preview
+                            </Button>
+                          )}
+                          {proposal.shareId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleCopyLink(proposal.shareId, proposal.id)}
+                              className="text-xs font-semibold"
                             >
                               {copiedId === proposal.id ? 'Copied!' : 'Share'}
                             </Button>

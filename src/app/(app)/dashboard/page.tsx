@@ -253,11 +253,13 @@ export default function DashboardPage() {
                       <tr key={proposal.id} className="hover:bg-[#fcfcfd] transition-colors group">
                         <td className="py-4 px-6">
                           <p className="font-bold text-sm text-[#09090b] truncate max-w-[240px] group-hover:text-[#6366f1] transition-colors">
-                            {proposal.title || 'Untitled Proposal'}
+                            {proposal.title || <span className="text-[#a1a1aa] italic">Untitled</span>}
                           </p>
-                          <p className="text-xs text-[#71717a] truncate max-w-[240px] mt-0.5">
-                            {proposal.purpose || 'No description'}
-                          </p>
+                          {proposal.purpose && (
+                            <p className="text-xs text-[#71717a] truncate max-w-[240px] mt-0.5">
+                              {proposal.purpose}
+                            </p>
+                          )}
                         </td>
                         <td className="py-4 px-4 hidden sm:table-cell">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.bg}`}>
