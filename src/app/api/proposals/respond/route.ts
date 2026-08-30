@@ -3,7 +3,7 @@ import { getAdminDbInstance } from '@/lib/firebase/admin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { shareId, action } = await request.json();
+    const { shareId, action, clientSignName, clientEmail } = await request.json();
 
     if (!shareId || !action) {
       return NextResponse.json({ error: 'shareId and action are required' }, { status: 400 });
@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
 
         if (action === 'accept') {
           updateData.acceptedAt = new Date();
+          if (clientSignName) updateData.clientSignName = clientSignName;
+          if (clientEmail) updateData.clientEmail = clientEmail;
         } else {
           updateData.rejectedAt = new Date();
         }

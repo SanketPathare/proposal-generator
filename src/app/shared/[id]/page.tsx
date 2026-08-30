@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Proposal, PricingTableData, TimelineMilestone } from '@/types';
@@ -17,9 +18,6 @@ import {
   Printer,
   ShieldCheck,
   Check,
-  Building,
-  Mail,
-  ExternalLink,
 } from 'lucide-react';
 
 export default function SharedProposalPage() {
@@ -37,6 +35,13 @@ export default function SharedProposalPage() {
   const [clientEmail, setClientEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  // Print / PDF ref
+  const printRef = useRef<HTMLDivElement>(null);
+  const handleDownloadPDF = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: proposal?.title || 'Proposal',
+  });
 
   useEffect(() => {
     if (!shareId) return;
@@ -79,7 +84,7 @@ export default function SharedProposalPage() {
       await fetch('/api/proposals/respond', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shareId, action: 'accept' }),
+        body: JSON.stringify({ shareId, action: 'accept', clientSignName, clientEmail }),
       });
       setStatus('accepted');
       setConfirmed(true);
@@ -108,6 +113,8 @@ export default function SharedProposalPage() {
       setStatus('rejected');
     }
   };
+
+
 
   if (loading) {
     return (
@@ -162,10 +169,18 @@ export default function SharedProposalPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => handleDownloadPDF()}
+              className="text-xs font-semibold hidden sm:inline-flex"
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => window.print()}
               className="text-xs font-semibold hidden sm:inline-flex"
             >
-              <Printer className="h-3.5 w-3.5 mr-1" /> Print / PDF
+              <Printer className="h-3.5 w-3.5 mr-1" /> Print
             </Button>
 
             {status === 'accepted' || confirmed ? (
@@ -195,8 +210,9 @@ export default function SharedProposalPage() {
         </div>
       </header>
 
-      {/* Main Document Content */}
+      {/* Main Document Content — ref used by react-to-print */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
+        <div ref={printRef} data-print-root className="space-y-8">
         {/* Confirmed Banner */}
         {confirmed && (
           <div className="p-4 sm:p-6 bg-emerald-50 border border-emerald-200 rounded-3xl flex items-center gap-4 text-emerald-800 animate-in fade-in-0 duration-300">
@@ -369,7 +385,7 @@ export default function SharedProposalPage() {
 
         {/* Bottom Accept Action Box */}
         {status !== 'accepted' && !confirmed && status !== 'rejected' && (
-          <div className="p-8 bg-[#09090b] text-white rounded-3xl text-center space-y-4 shadow-xl print:hidden">
+          <div className="p-8 bg-[#09090b] text-white rounded-3xl text-center space-y-4 shadow-xl print:hidden" data-html2canvas-ignore="true">
             <span className="text-xs font-bold uppercase tracking-widest text-[#d4ff00]">Ready to kick-off?</span>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Accept and approve this proposal</h3>
             <p className="text-xs text-neutral-400 max-w-md mx-auto">
@@ -385,6 +401,7 @@ export default function SharedProposalPage() {
             </Button>
           </div>
         )}
+        </div>
       </main>
 
       {/* Digital Acceptance Modal Dialog */}

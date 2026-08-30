@@ -122,6 +122,8 @@ export interface Proposal {
   lastViewedAt: Date | null;
   acceptedAt: Date | null;
   rejectedAt: Date | null;
+  clientSignName: string | null;
+  clientEmail: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

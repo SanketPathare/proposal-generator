@@ -255,3 +255,76 @@ body {
 .animate-pulse-glow {
   animation: pulseGlow 4s ease-in-out infinite;
 }
+
+/* ============================================================
+   PRINT / PDF STYLES
+   Applies when user clicks "Download PDF" (react-to-print)
+   or "Print" from the shared proposal view.
+   ============================================================ */
+@media print {
+  /* Page size & margins */
+  @page {
+    size: A4;
+    margin: 12mm 14mm;
+  }
+
+  /* Reset body so content fills the page */
+  html,
+  body {
+    width: 100%;
+    height: auto;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* Hide non-content chrome */
+  header,
+  footer,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* The printable content wrapper */
+  main,
+  [data-print-root] {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Preserve background colors and gradients */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Avoid breaking cards across pages */
+  .rounded-3xl,
+  .rounded-2xl,
+  [class*="rounded"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep table rows together */
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Remove shadows that look bad in print */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Ensure links don't show URLs */
+  a[href]::after {
+    content: none !important;
+  }
+}

@@ -21,6 +21,9 @@ import {
   LayoutGrid,
   List as ListIcon,
   Check,
+  CheckCircle2,
+  User,
+  Mail,
 } from 'lucide-react';
 
 const FILTER_TABS: { value: ProposalStatus | 'all'; label: string }[] = [
@@ -239,6 +242,26 @@ export default function ProposalsPage() {
                     </span>
                   </div>
 
+                  {/* Accepted Info Banner */}
+                  {proposal.status === 'accepted' && proposal.clientSignName && (
+                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl space-y-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Accepted & Signed
+                      </p>
+                      <p className="text-xs font-semibold text-emerald-900 flex items-center gap-1">
+                        <User className="h-3 w-3 text-emerald-600" /> {proposal.clientSignName}
+                      </p>
+                      {proposal.clientEmail && (
+                        <p className="text-xs text-emerald-700 flex items-center gap-1">
+                          <Mail className="h-3 w-3" /> {proposal.clientEmail}
+                        </p>
+                      )}
+                      {proposal.acceptedAt && (
+                        <p className="text-[10px] text-emerald-600">{formatDate(proposal.acceptedAt)}</p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Metrics Badge Row */}
                   <div className="flex items-center gap-3 text-xs text-[#71717a] my-5 pt-3 border-t border-[#f4f4f5]">
                     <span className="flex items-center gap-1 font-medium">
@@ -303,6 +326,7 @@ export default function ProposalsPage() {
                 <tr>
                   <th className="py-3.5 px-6">Proposal</th>
                   <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Client</th>
                   <th className="py-3.5 px-4">Views</th>
                   <th className="py-3.5 px-4">Updated</th>
                   <th className="py-3.5 px-6 text-right">Actions</th>
@@ -322,6 +346,23 @@ export default function ProposalsPage() {
                           <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
                           {getStatusLabel(proposal.status)}
                         </span>
+                      </td>
+                      {/* Client / Accepted-by column */}
+                      <td className="py-4 px-4">
+                        {proposal.status === 'accepted' && proposal.clientSignName ? (
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                              <User className="h-3 w-3" />{proposal.clientSignName}
+                            </p>
+                            {proposal.clientEmail && (
+                              <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+                                <Mail className="h-3 w-3" />{proposal.clientEmail}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[#a1a1aa] text-xs">—</span>
+                        )}
                       </td>
                       <td className="py-4 px-4 font-medium text-[#52525b]">
                         {proposal.viewCount || 0}

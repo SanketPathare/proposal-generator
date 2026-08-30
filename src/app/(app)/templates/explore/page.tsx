@@ -203,6 +203,8 @@ export default function ExploreTemplatesPage() {
         lastViewedAt: null,
         acceptedAt: null,
         rejectedAt: null,
+        clientSignName: null,
+        clientEmail: null,
       });
 
       router.push(`/proposals/${newProposal.id}`);

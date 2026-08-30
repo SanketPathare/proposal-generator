@@ -207,6 +207,8 @@ export default function CreateProposalPage() {
         lastViewedAt: null,
         acceptedAt: null,
         rejectedAt: null,
+        clientSignName: null,
+        clientEmail: null,
       });
 
       router.push(`/proposals/${proposal.id}`);
