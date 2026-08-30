@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -28,7 +32,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   }, [sidebarCollapsed, mounted]);
 
-  if (!mounted) {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login');
+    }
+  }, [user, loading, router]);
+
+  if (!mounted || loading || !user) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="fixed left-0 top-0 z-40 h-screen w-64 bg-white border-r border-gray-200" />

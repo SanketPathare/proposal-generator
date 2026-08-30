@@ -42,15 +42,21 @@ const COLLECTIONS = {
 } as const;
 
 function userDoc(userId: string) {
-  return doc(getDb(), COLLECTIONS.USERS, userId);
+  const database = getDb();
+  if (!database) throw new Error('Firestore is not initialized');
+  return doc(database, COLLECTIONS.USERS, userId);
 }
 
 function userSubCollection(userId: string, collectionName: string) {
-  return collection(getDb(), COLLECTIONS.USERS, userId, collectionName);
+  const database = getDb();
+  if (!database) throw new Error('Firestore is not initialized');
+  return collection(database, COLLECTIONS.USERS, userId, collectionName);
 }
 
 function userSubDoc(userId: string, collectionName: string, docId: string) {
-  return doc(getDb(), COLLECTIONS.USERS, userId, collectionName, docId);
+  const database = getDb();
+  if (!database) throw new Error('Firestore is not initialized');
+  return doc(database, COLLECTIONS.USERS, userId, collectionName, docId);
 }
 
 function toFirestore(obj: any): any {

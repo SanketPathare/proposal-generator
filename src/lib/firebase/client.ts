@@ -12,25 +12,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-let storage: FirebaseStorage;
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
+let initialized = false;
 
 function initializeFirebase() {
   if (typeof window === 'undefined') return;
+  if (initialized) return;
 
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
+  try {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApps()[0];
+    }
+
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    initialized = true;
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
   }
-
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
 }
 
+// Initialize immediately on client
 if (typeof window !== 'undefined') {
   initializeFirebase();
 }
@@ -47,6 +55,9 @@ function getAuthInstance(): Auth {
 
 function getDbInstance(): Firestore {
   if (!db) initializeFirebase();
+  if (!db) {
+    console.error('Firestore is not initialized. Make sure Firebase is properly configured.');
+  }
   return db!;
 }
 
