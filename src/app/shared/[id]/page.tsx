@@ -199,7 +199,7 @@ export default function SharedProposalPage() {
               <Sparkles className="h-4 w-4 fill-[#d4ff00]" />
             </div>
             <div>
-          <span className="font-extrabold text-sm text-[#09090b] tracking-tight">Proposal Preview</span>
+              <span className="font-extrabold text-sm text-[#09090b] tracking-tight">Proposal Preview</span>
               <span className="text-[10px] text-[#71717a] block">Live &amp; accepting requests</span>
             </div>
           </div>

@@ -53,6 +53,14 @@ export async function POST(request: NextRequest) {
 
     const proposalData = proposalSnap.data()!;
 
+    // Reject draft proposals — drafts are not publicly viewable
+    if (proposalData.status === 'draft') {
+      return NextResponse.json(
+        { error: 'not_found', message: 'This proposal is not yet published.' },
+        { status: 404 }
+      );
+    }
+
     // Update view count and status (non-critical)
     try {
       await proposalRef.update({

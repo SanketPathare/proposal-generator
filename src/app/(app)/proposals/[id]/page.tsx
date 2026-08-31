@@ -225,7 +225,12 @@ export default function ProposalEditorPage() {
         status: 'live',
         sharedAt: new Date(),
       });
-      await firestoreHelpers.createSharedProposal(shareId, user.uid, proposalId);
+
+      // Ensure sharedProposals lookup exists
+      if (!proposal?.shareId) {
+        await firestoreHelpers.createSharedProposal(shareId, user.uid, proposalId);
+      }
+
       setStatus('live');
       if (proposal) setProposal({ ...proposal, shareId, status: 'live' });
       const link = `${window.location.origin}/shared/${shareId}`;
@@ -241,7 +246,6 @@ export default function ProposalEditorPage() {
 
   const handleCopyLiveLink = async () => {
     if (!proposal?.shareId) {
-      // If for some reason they got here without a shareId, generate it
       await handleGoLive();
       return;
     }
@@ -321,7 +325,7 @@ export default function ProposalEditorPage() {
             value={status === 'sent' || status === 'viewed' || status === 'live' ? 'live' : 'draft'}
             onChange={(e) => {
               const val = e.target.value as ProposalStatus;
-              if (val === 'live' && !proposal?.shareId) {
+              if (val === 'live') {
                 handleGoLive();
               } else {
                 setStatus(val);

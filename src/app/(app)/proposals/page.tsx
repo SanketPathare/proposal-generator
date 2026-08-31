@@ -289,7 +289,7 @@ export default function ProposalsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => window.open(`/shared/${proposal.shareId}`, '_blank')}
-                        title="Preview proposal as client"
+                        title="Preview proposal"
                         className="px-2.5"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -301,7 +301,7 @@ export default function ProposalsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleCopyLink(proposal.shareId, proposal.id)}
-                        title="Copy client share link"
+                        title="Copy share link"
                         className="px-2.5"
                       >
                         {copiedId === proposal.id ? (
@@ -391,7 +391,7 @@ export default function ProposalsPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => window.open(`/shared/${proposal.shareId}`, '_blank')}
-                              title="Preview as client"
+                              title="Preview proposal"
                               className="text-xs font-semibold flex items-center gap-1"
                             >
                               <Eye className="h-3.5 w-3.5" /> Preview
