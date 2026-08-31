@@ -237,3 +237,17 @@ export interface DashboardStats {
   viewedProposals: number;
   acceptedProposals: number;
 }
+
+export type NotificationType = 'proposal_viewed' | 'accept_request' | 'proposal_accepted' | 'proposal_rejected' | 'proposal_live';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  proposalId: string | null;
+  proposalTitle: string | null;
+  read: boolean;
+  createdAt: Date;
+}

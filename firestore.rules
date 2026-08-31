@@ -59,6 +59,11 @@ service cloud.firestore {
       match /media/{mediaId} {
         allow read, write: if isOwner(userId);
       }
+      
+      // Notifications subcollection
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // Public templates - read only for everyone

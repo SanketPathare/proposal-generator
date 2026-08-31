@@ -17,6 +17,7 @@ import {
   ExternalLink,
   ChevronDown,
   CheckCircle2,
+  Bell,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -36,6 +37,7 @@ const navigation = [
   },
   { name: 'Clients', href: '/clients', icon: Users },
   { name: 'Content Library', href: '/content', icon: Library },
+  { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Settings', href: '/settings/profile', icon: Settings },
 ];
 

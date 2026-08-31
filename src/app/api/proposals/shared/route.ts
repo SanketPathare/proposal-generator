@@ -68,6 +68,20 @@ export async function POST(request: NextRequest) {
         lastViewedAt: new Date(),
         status: (proposalData.status === 'sent' || proposalData.status === 'viewed') ? 'live' : proposalData.status,
       });
+
+      // Create notification for proposal owner
+      const notifRef = db.collection('users').doc(userId).collection('notifications').doc();
+      await notifRef.set({
+        id: notifRef.id,
+        userId,
+        type: 'proposal_viewed',
+        title: 'Proposal Viewed',
+        message: `"${proposalData.title || 'Untitled Proposal'}" was viewed by a client.`,
+        proposalId,
+        proposalTitle: proposalData.title || 'Untitled Proposal',
+        read: false,
+        createdAt: new Date(),
+      });
     } catch {
       // Ignore — view count update is not critical
     }

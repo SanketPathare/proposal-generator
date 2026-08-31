@@ -39,6 +39,7 @@ export function Header({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
       '/templates': { title: 'Templates', subtitle: 'Browse proposal templates' },
       '/clients': { title: 'Clients', subtitle: 'Client relationships & directory' },
       '/content': { title: 'Content Library', subtitle: 'Reusable content blocks' },
+      '/notifications': { title: 'Notifications', subtitle: 'Activity & alerts' },
       '/settings/profile': { title: 'Profile Settings', subtitle: 'Personal info & account' },
       '/settings/branding': { title: 'Branding Settings', subtitle: 'Logo, colors & identity' },
       '/settings/proposal': { title: 'Proposal Defaults', subtitle: 'Currency & payment terms' },
@@ -84,7 +85,7 @@ export function Header({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
           <button
             className="relative p-2 rounded-full hover:bg-[#f4f4f5] text-[#71717a] hover:text-[#09090b] transition-colors cursor-pointer"
             aria-label="Notifications"
-            onClick={() => alert('No new notifications')}
+            onClick={() => router.push('/notifications')}
           >
             <Bell className="h-4.5 w-4.5" />
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#d4ff00] border border-white" />

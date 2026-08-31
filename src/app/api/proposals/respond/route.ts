@@ -54,6 +54,20 @@ export async function POST(request: NextRequest) {
                 clientEmail: clientEmail || proposalData.clientEmail || '',
                 acceptedAt: new Date(),
               });
+
+              // Create notification
+              const notifRef = db.collection('users').doc(userId).collection('notifications').doc();
+              await notifRef.set({
+                id: notifRef.id,
+                userId,
+                type: 'accept_request',
+                title: 'Accept Request Received',
+                message: `${clientSignName || 'A client'} accepted "${proposalData.title || 'Untitled Proposal'}".`,
+                proposalId,
+                proposalTitle: proposalData.title || 'Untitled Proposal',
+                read: false,
+                createdAt: new Date(),
+              });
             } else if (action === 'undo_accept') {
               const currentAcceptors: any[] = proposalData.acceptors || [];
               const updatedAcceptors = currentAcceptors.filter(
@@ -71,6 +85,20 @@ export async function POST(request: NextRequest) {
               await proposalRef.update({
                 status: 'rejected',
                 rejectedAt: new Date(),
+              });
+
+              // Create notification
+              const notifRef = db.collection('users').doc(userId).collection('notifications').doc();
+              await notifRef.set({
+                id: notifRef.id,
+                userId,
+                type: 'proposal_rejected',
+                title: 'Proposal Declined',
+                message: `"${proposalData.title || 'Untitled Proposal'}" was declined by a client.`,
+                proposalId,
+                proposalTitle: proposalData.title || 'Untitled Proposal',
+                read: false,
+                createdAt: new Date(),
               });
             }
           }

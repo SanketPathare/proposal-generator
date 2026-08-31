@@ -29,6 +29,7 @@ import {
   MediaAsset,
   ProposalStatus,
   ContentCategory,
+  AppNotification,
 } from '@/types';
 
 const COLLECTIONS = {
@@ -315,6 +316,46 @@ export const firestoreHelpers = {
 
   async deleteMediaReference(userId: string, mediaId: string) {
     await deleteDoc(userSubDoc(userId, COLLECTIONS.MEDIA, mediaId));
+  },
+
+  // Notifications
+  async createNotification(userId: string, data: Omit<AppNotification, 'id' | 'createdAt'>) {
+    const ref = doc(userSubCollection(userId, 'notifications'));
+    const notification = { ...data, id: ref.id, createdAt: new Date() };
+    await setDoc(ref, toFirestore(notification));
+    return notification;
+  },
+
+  async getNotifications(userId: string): Promise<AppNotification[]> {
+    const q = query(
+      userSubCollection(userId, 'notifications') as CollectionReference<AppNotification>,
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((doc) => fromFirestore(doc.data()) as AppNotification);
+  },
+
+  async markNotificationRead(userId: string, notificationId: string) {
+    await updateDoc(userSubDoc(userId, 'notifications', notificationId), { read: true });
+  },
+
+  async markAllNotificationsRead(userId: string) {
+    const q = query(
+      userSubCollection(userId, 'notifications') as CollectionReference<AppNotification>,
+      where('read', '==', false)
+    );
+    const snap = await getDocs(q);
+    const batch = snap.docs.map((doc) => updateDoc(doc.ref, { read: true }));
+    await Promise.all(batch);
+  },
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const q = query(
+      userSubCollection(userId, 'notifications') as CollectionReference<AppNotification>,
+      where('read', '==', false)
+    );
+    const snap = await getDocs(q);
+    return snap.size;
   },
 };
 
