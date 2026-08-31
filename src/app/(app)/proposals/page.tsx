@@ -7,7 +7,7 @@ import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Proposal, ProposalStatus } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { formatDate, getStatusBadgeStyle, getStatusLabel } from '@/lib/utils';
+import { formatDate, getStatusBadgeStyle, getStatusLabel, generateShareId } from '@/lib/utils';
 import {
   Plus,
   Search,
@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   User,
   Mail,
+  Radio,
 } from 'lucide-react';
 
 const FILTER_TABS: { value: ProposalStatus | 'all' | 'live_all'; label: string }[] = [
@@ -44,6 +45,7 @@ export default function ProposalsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -101,6 +103,38 @@ export default function ProposalsPage() {
     navigator.clipboard.writeText(url);
     setCopiedId(proposalId);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleToggleStatus = async (proposal: Proposal) => {
+    if (!user) return;
+    const isLive = proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed';
+    const newStatus: ProposalStatus = isLive ? 'draft' : 'live';
+    setTogglingId(proposal.id);
+    try {
+      if (newStatus === 'live') {
+        const shareId = proposal.shareId || generateShareId();
+        await firestoreHelpers.updateProposal(user.uid, proposal.id, {
+          shareId,
+          status: 'live',
+          sharedAt: new Date(),
+        });
+        await firestoreHelpers.createSharedProposal(shareId, user.uid, proposal.id);
+        setProposals((prev) =>
+          prev.map((p) => (p.id === proposal.id ? { ...p, shareId, status: 'live' } : p))
+        );
+      } else {
+        await firestoreHelpers.updateProposal(user.uid, proposal.id, {
+          status: 'draft',
+        });
+        setProposals((prev) =>
+          prev.map((p) => (p.id === proposal.id ? { ...p, status: 'draft' } : p))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to toggle status:', err);
+    } finally {
+      setTogglingId(null);
+    }
   };
 
   if (loading) {
@@ -226,7 +260,6 @@ export default function ProposalsPage() {
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProposals.map((proposal) => {
-            const badge = getStatusBadgeStyle(proposal.status);
             return (
               <Card key={proposal.id} hoverEffect className="flex flex-col justify-between overflow-hidden group">
                 <CardContent className="p-6">
@@ -242,10 +275,19 @@ export default function ProposalsPage() {
                         </p>
                       )}
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ${badge.bg}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
-                      {getStatusLabel(proposal.status)}
-                    </span>
+                    <button
+                      onClick={() => handleToggleStatus(proposal)}
+                      disabled={togglingId === proposal.id}
+                      className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer disabled:opacity-50 ${
+                        proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed'
+                          ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/25'
+                          : 'bg-neutral-500/10 text-neutral-500 border border-neutral-500/20 hover:bg-neutral-500/20'
+                      }`}
+                      title={proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed' ? 'Click to set as Draft' : 'Click to Go Live'}
+                    >
+                      <Radio className={`h-3 w-3 ${proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed' ? 'text-emerald-500 animate-pulse' : 'text-neutral-400'}`} />
+                      {proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed' ? 'Live' : 'Draft'}
+                    </button>
                   </div>
 
                   {/* Accept Requests Banner */}
@@ -345,7 +387,6 @@ export default function ProposalsPage() {
               </thead>
               <tbody className="divide-y divide-[#f4f4f5]">
                 {filteredProposals.map((proposal) => {
-                  const badge = getStatusBadgeStyle(proposal.status);
                   return (
                     <tr key={proposal.id} className="hover:bg-[#fcfcfd] transition-colors">
                       <td className="py-4 px-6">
@@ -357,10 +398,19 @@ export default function ProposalsPage() {
                         )}
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.bg}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${badge.dot}`} />
-                          {getStatusLabel(proposal.status)}
-                        </span>
+                        <button
+                          onClick={() => handleToggleStatus(proposal)}
+                          disabled={togglingId === proposal.id}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer disabled:opacity-50 ${
+                            proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed'
+                              ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 hover:bg-emerald-500/25'
+                              : 'bg-neutral-500/10 text-neutral-500 border border-neutral-500/20 hover:bg-neutral-500/20'
+                          }`}
+                          title={proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed' ? 'Click to set as Draft' : 'Click to Go Live'}
+                        >
+                          <Radio className={`h-3 w-3 ${proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed' ? 'text-emerald-500 animate-pulse' : 'text-neutral-400'}`} />
+                          {proposal.status === 'live' || proposal.status === 'sent' || proposal.status === 'viewed' ? 'Live' : 'Draft'}
+                        </button>
                       </td>
                       {/* Acceptors / Client column */}
                       <td className="py-4 px-4">
