@@ -1,5 +1,35 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Proposal } from '@/types';
+
+export const CURRENCIES = [
+  { value: 'USD', label: 'USD ($) - US Dollar', symbol: '$', locale: 'en-US' },
+  { value: 'EUR', label: 'EUR (€) - Euro', symbol: '€', locale: 'de-DE' },
+  { value: 'GBP', label: 'GBP (£) - British Pound', symbol: '£', locale: 'en-GB' },
+  { value: 'INR', label: 'INR (₹) - Indian Rupee', symbol: '₹', locale: 'en-IN' },
+  { value: 'CAD', label: 'CAD ($) - Canadian Dollar', symbol: 'CA$', locale: 'en-CA' },
+  { value: 'AUD', label: 'AUD ($) - Australian Dollar', symbol: 'A$', locale: 'en-AU' },
+  { value: 'SGD', label: 'SGD ($) - Singapore Dollar', symbol: 'S$', locale: 'en-SG' },
+  { value: 'AED', label: 'AED (د.إ) - UAE Dirham', symbol: 'د.إ', locale: 'ar-AE' },
+  { value: 'JPY', label: 'JPY (¥) - Japanese Yen', symbol: '¥', locale: 'ja-JP' },
+  { value: 'CNY', label: 'CNY (¥) - Chinese Yuan', symbol: '¥', locale: 'zh-CN' },
+  { value: 'CHF', label: 'CHF (CHF) - Swiss Franc', symbol: 'CHF', locale: 'de-CH' },
+  { value: 'KRW', label: 'KRW (₩) - South Korean Won', symbol: '₩', locale: 'ko-KR' },
+  { value: 'BRL', label: 'BRL (R$) - Brazilian Real', symbol: 'R$', locale: 'pt-BR' },
+  { value: 'MXN', label: 'MXN ($) - Mexican Peso', symbol: 'MX$', locale: 'es-MX' },
+  { value: 'ZAR', label: 'ZAR (R) - South African Rand', symbol: 'R', locale: 'en-ZA' },
+  { value: 'SEK', label: 'SEK (kr) - Swedish Krona', symbol: 'kr', locale: 'sv-SE' },
+  { value: 'NOK', label: 'NOK (kr) - Norwegian Krone', symbol: 'kr', locale: 'nb-NO' },
+  { value: 'DKK', label: 'DKK (kr) - Danish Krone', symbol: 'kr', locale: 'da-DK' },
+  { value: 'NZD', label: 'NZD ($) - New Zealand Dollar', symbol: 'NZ$', locale: 'en-NZ' },
+  { value: 'THB', label: 'THB (฿) - Thai Baht', symbol: '฿', locale: 'th-TH' },
+  { value: 'IDR', label: 'IDR (Rp) - Indonesian Rupiah', symbol: 'Rp', locale: 'id-ID' },
+  { value: 'MYR', label: 'MYR (RM) - Malaysian Ringgit', symbol: 'RM', locale: 'ms-MY' },
+  { value: 'PHP', label: 'PHP (₱) - Philippine Peso', symbol: '₱', locale: 'en-PH' },
+  { value: 'PLN', label: 'PLN (zł) - Polish Zloty', symbol: 'zł', locale: 'pl-PL' },
+  { value: 'TRY', label: 'TRY (₺) - Turkish Lira', symbol: '₺', locale: 'tr-TR' },
+  { value: 'RUB', label: 'RUB (₽) - Russian Ruble', symbol: '₽', locale: 'ru-RU' },
+];
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,14 +50,17 @@ export function generateShareId(): string {
 
 export function formatCurrency(amount: number, currency: string = 'USD'): string {
   try {
-    return new Intl.NumberFormat('en-US', {
+    const currencyInfo = CURRENCIES.find((c) => c.value === currency);
+    const locale = currencyInfo?.locale || 'en-US';
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currency || 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: currency === 'JPY' || currency === 'KRW' ? 0 : 0,
+      maximumFractionDigits: currency === 'JPY' || currency === 'KRW' ? 0 : 2,
     }).format(amount);
   } catch {
-    return `${currency || '$'} ${amount.toLocaleString()}`;
+    const currencyInfo = CURRENCIES.find((c) => c.value === currency);
+    return `${currencyInfo?.symbol || currency || '$'} ${amount.toLocaleString()}`;
   }
 }
 
@@ -136,4 +169,38 @@ export function deepClone<T>(obj: T): T {
   } catch {
     return { ...obj };
   }
+}
+
+export function cloneProposal(proposal: Proposal, newTitle?: string): Omit<Proposal, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'viewCount'> {
+  return {
+    clientId: proposal.clientId,
+    title: newTitle || `${proposal.title} (Copy)`,
+    purpose: proposal.purpose,
+    status: 'draft' as const,
+    templateId: proposal.templateId,
+    currency: proposal.currency,
+    sections: proposal.sections.map((s) => ({
+      ...s,
+      id: generateId(),
+    })),
+    pricing: proposal.pricing ? deepClone(proposal.pricing) : null,
+    shareId: null,
+    sharedAt: null,
+    expiresAt: null,
+    passwordHash: null,
+    lastViewedAt: null,
+    acceptedAt: null,
+    rejectedAt: null,
+    clientSignName: null,
+    clientEmail: null,
+  };
+}
+
+export function getCurrencySymbol(currency: string = 'USD'): string {
+  const info = CURRENCIES.find((c) => c.value === currency);
+  return info?.symbol || '$';
+}
+
+export function getCurrencyOptions() {
+  return CURRENCIES.map((c) => ({ value: c.value, label: c.label }));
 }

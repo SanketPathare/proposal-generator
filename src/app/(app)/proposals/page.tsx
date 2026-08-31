@@ -7,7 +7,7 @@ import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Proposal, ProposalStatus } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { formatDate, getStatusBadgeStyle, getStatusLabel, generateShareId } from '@/lib/utils';
+import { formatDate, getStatusBadgeStyle, getStatusLabel, generateShareId, cloneProposal } from '@/lib/utils';
 import {
   Plus,
   Search,
@@ -46,6 +46,7 @@ export default function ProposalsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -134,6 +135,21 @@ export default function ProposalsPage() {
       console.error('Failed to toggle status:', err);
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleDuplicate = async (proposal: Proposal) => {
+    if (!user) return;
+    setDuplicatingId(proposal.id);
+    try {
+      const cloned = cloneProposal(proposal);
+      const newProposal = await firestoreHelpers.createProposal(user.uid, cloned);
+      setProposals((prev) => [newProposal, ...prev]);
+      router.push(`/proposals/${newProposal.id}`);
+    } catch (err) {
+      console.error('Failed to duplicate proposal:', err);
+    } finally {
+      setDuplicatingId(null);
     }
   };
 
@@ -294,11 +310,11 @@ export default function ProposalsPage() {
                   {(proposal.acceptors?.length ?? 0) > 0 && (
                     <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> {proposal.acceptors.length} Accept {proposal.acceptors.length === 1 ? 'Request' : 'Requests'} Received
+                        <CheckCircle2 className="h-3 w-3" /> {proposal.acceptors?.length} Accept {proposal.acceptors?.length === 1 ? 'Request' : 'Requests'} Received
                       </p>
                       <p className="text-xs text-emerald-800 mt-1">
-                        {proposal.acceptors.map(a => a.clientSignName).filter(Boolean).slice(0, 2).join(', ')}
-                        {(proposal.acceptors.length ?? 0) > 2 ? ` +${proposal.acceptors.length - 2} more` : ''}
+                        {proposal.acceptors?.map(a => a.clientSignName).filter(Boolean).slice(0, 2).join(', ')}
+                        {(proposal.acceptors?.length ?? 0) > 2 ? ` +${(proposal.acceptors?.length ?? 0) - 2} more` : ''}
                       </p>
                     </div>
                   )}
@@ -324,6 +340,17 @@ export default function ProposalsPage() {
                       onClick={() => router.push(`/proposals/${proposal.id}`)}
                     >
                       Edit
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDuplicate(proposal)}
+                      loading={duplicatingId === proposal.id}
+                      title="Duplicate proposal"
+                      className="px-2.5"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
 
                     {proposal.shareId && (
@@ -418,10 +445,10 @@ export default function ProposalsPage() {
                           <div className="space-y-0.5">
                             <p className="text-xs font-bold text-emerald-700 flex items-center gap-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              {proposal.acceptors.length} {proposal.acceptors.length === 1 ? 'Request' : 'Requests'}
+                              {proposal.acceptors?.length} {proposal.acceptors?.length === 1 ? 'Request' : 'Requests'}
                             </p>
                             <p className="text-[11px] text-emerald-600 truncate max-w-[140px]">
-                              {proposal.acceptors[0]?.clientSignName}
+                              {proposal.acceptors?.[0]?.clientSignName}
                             </p>
                           </div>
                         ) : (
@@ -464,6 +491,15 @@ export default function ProposalsPage() {
                             onClick={() => router.push(`/proposals/${proposal.id}`)}
                           >
                             Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDuplicate(proposal)}
+                            loading={duplicatingId === proposal.id}
+                            title="Duplicate proposal"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
                           </Button>
                           <Button
                             variant="ghost"

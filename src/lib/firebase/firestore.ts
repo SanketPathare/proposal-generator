@@ -30,6 +30,7 @@ import {
   ProposalStatus,
   ContentCategory,
   AppNotification,
+  ProposalVersion,
 } from '@/types';
 
 const COLLECTIONS = {
@@ -356,6 +357,35 @@ export const firestoreHelpers = {
     );
     const snap = await getDocs(q);
     return snap.size;
+  },
+
+  // Proposal Versions
+  async createProposalVersion(userId: string, proposalId: string, data: { title: string; sections: any[]; pricing: any; currency: string }) {
+    const ref = doc(userSubCollection(userId, `proposals/${proposalId}/versions`));
+    const version = {
+      ...data,
+      id: ref.id,
+      proposalId,
+      userId,
+      createdAt: new Date(),
+    };
+    await setDoc(ref, toFirestore(version));
+    return version;
+  },
+
+  async getProposalVersions(userId: string, proposalId: string): Promise<ProposalVersion[]> {
+    const q = query(
+      userSubCollection(userId, `proposals/${proposalId}/versions`) as CollectionReference<ProposalVersion>,
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map((doc) => fromFirestore(doc.data()) as ProposalVersion);
+  },
+
+  async restoreProposalVersion(userId: string, proposalId: string, versionId: string): Promise<ProposalVersion | null> {
+    const snap = await getDoc(userSubDoc(userId, `proposals/${proposalId}/versions`, versionId));
+    if (!snap.exists()) return null;
+    return fromFirestore(snap.data()) as ProposalVersion;
   },
 };
 

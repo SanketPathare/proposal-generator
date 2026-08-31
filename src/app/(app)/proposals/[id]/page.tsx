@@ -12,7 +12,7 @@ import { SectionManager, SECTION_TYPE_DETAILS } from '@/components/editor/Sectio
 import { PricingTable } from '@/components/editor/PricingTable';
 import { Timeline } from '@/components/editor/Timeline';
 import { SaveAsTemplate } from '@/components/editor/SaveAsTemplate';
-import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel } from '@/lib/utils';
+import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel, CURRENCIES, cloneProposal } from '@/lib/utils';
 import {
   ArrowLeft,
   Save,
@@ -29,6 +29,7 @@ import {
   PanelLeftOpen,
   Sparkles,
   Radio,
+  Download,
 } from 'lucide-react';
 
 function AddSectionFloating({ onAdd }: { onAdd: (type: SectionType) => void }) {
@@ -94,6 +95,10 @@ export default function ProposalEditorPage() {
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState<ProposalStatus>('draft');
   const [sections, setSections] = useState<ProposalSection[]>([]);
+  const [currency, setCurrency] = useState('USD');
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [clientName, setClientName] = useState('');
+  const [clients, setClients] = useState<{ id: string; name: string; company: string }[]>([]);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
@@ -102,6 +107,10 @@ export default function ProposalEditorPage() {
   const [sharing, setSharing] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
+  const [versionModalOpen, setVersionModalOpen] = useState(false);
+  const [versions, setVersions] = useState<{ id: string; title: string; sections: ProposalSection[]; pricing: PricingTableData | null; currency: string; createdAt: Date }[]>([]);
+  const [generatingSection, setGeneratingSection] = useState<string | null>(null);
 
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDirtyRef = useRef(false);
@@ -109,6 +118,7 @@ export default function ProposalEditorPage() {
   useEffect(() => {
     if (!user || !proposalId) return;
     loadProposal();
+    loadClients();
   }, [user, proposalId]);
 
   useEffect(() => {
@@ -133,12 +143,25 @@ export default function ProposalEditorPage() {
       setTitle(data.title || 'Untitled Proposal');
       setStatus(data.status || 'draft');
       setSections(data.sections || []);
+      setCurrency(data.currency || 'USD');
+      setClientId(data.clientId || null);
+      setClientName(data.clientName || '');
       setLastSaved(data.updatedAt ? new Date(data.updatedAt) : new Date());
     } catch (err) {
       console.error('Failed to load proposal:', err);
       setError('Failed to load proposal.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadClients = async () => {
+    if (!user) return;
+    try {
+      const data = await firestoreHelpers.getClients(user.uid);
+      setClients(data.map((c) => ({ id: c.id, name: c.name, company: c.company })));
+    } catch (err) {
+      console.error('Failed to load clients:', err);
     }
   };
 
@@ -150,7 +173,7 @@ export default function ProposalEditorPage() {
     autoSaveTimerRef.current = setTimeout(() => {
       saveProposal(true);
     }, 2000);
-  }, [proposalId, title, status, sections]);
+  }, [proposalId, title, status, sections, currency, clientId, clientName]);
 
   const saveProposal = async (isAuto = false) => {
     if (!user || !proposalId) return;
@@ -160,6 +183,9 @@ export default function ProposalEditorPage() {
         title,
         status,
         sections,
+        currency,
+        clientId,
+        clientName: clientName || undefined,
       });
       setLastSaved(new Date());
       isDirtyRef.current = false;
@@ -212,12 +238,131 @@ export default function ProposalEditorPage() {
     scheduleAutoSave();
   };
 
+  const handleCurrencyChange = (newCurrency: string) => {
+    setCurrency(newCurrency);
+    const updatedSections = sections.map((s) => {
+      if (s.type === 'pricing' && s.content) {
+        return { ...s, content: { ...s.content, currency: newCurrency } };
+      }
+      return s;
+    });
+    setSections(updatedSections);
+    scheduleAutoSave();
+  };
+
+  const handleClientChange = (newClientId: string) => {
+    if (!newClientId) {
+      setClientId(null);
+      setClientName('');
+    } else {
+      const selected = clients.find((c) => c.id === newClientId);
+      setClientId(newClientId);
+      setClientName(selected ? `${selected.name} - ${selected.company}` : '');
+    }
+    scheduleAutoSave();
+  };
+
+  const handleDuplicate = async () => {
+    if (!user || !proposal) return;
+    setDuplicating(true);
+    try {
+      const cloned = cloneProposal(proposal);
+      const newProposal = await firestoreHelpers.createProposal(user.uid, cloned);
+      router.push(`/proposals/${newProposal.id}`);
+    } catch (err) {
+      console.error('Failed to duplicate proposal:', err);
+      setError('Failed to duplicate proposal.');
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
+  const handleSaveVersion = async () => {
+    if (!user || !proposalId) return;
+    try {
+      await firestoreHelpers.createProposalVersion(user.uid, proposalId, {
+        title,
+        sections,
+        pricing: proposal?.pricing || null,
+        currency,
+      });
+    } catch (err) {
+      console.error('Failed to save version:', err);
+    }
+  };
+
+  const handleLoadVersions = async () => {
+    if (!user || !proposalId) return;
+    try {
+      const data = await firestoreHelpers.getProposalVersions(user.uid, proposalId);
+      setVersions(data);
+      setVersionModalOpen(true);
+    } catch (err) {
+      console.error('Failed to load versions:', err);
+    }
+  };
+
+  const handleRestoreVersion = async (versionId: string) => {
+    if (!user || !proposalId) return;
+    try {
+      const version = versions.find((v) => v.id === versionId);
+      if (!version) return;
+      setSections(version.sections);
+      setCurrency(version.currency || 'USD');
+      if (version.title) setTitle(version.title);
+      scheduleAutoSave();
+      setVersionModalOpen(false);
+    } catch (err) {
+      console.error('Failed to restore version:', err);
+    }
+  };
+
+  const handleGenerateSection = async (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section || section.type === 'cover' || section.type === 'pricing' || section.type === 'timeline') return;
+
+    setGeneratingSection(sectionId);
+    try {
+      const res = await fetch('/api/ai/generate-section', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sectionType: section.type,
+          context: {
+            purpose: proposal?.purpose || title,
+            clientName: clientName || 'Client',
+            projectDescription: proposal?.purpose || title,
+            services: [],
+          },
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.content) {
+          handleSectionContentChange(sectionId, data.content);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to generate section:', err);
+    } finally {
+      setGeneratingSection(null);
+    }
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
   const handleGoLive = async () => {
     if (!user || !proposalId) return;
     setSharing(true);
     try {
+      // Save version before going live
+      await handleSaveVersion();
+
       // Save any pending edits first
-      await firestoreHelpers.updateProposal(user.uid, proposalId, { title, sections });
+      await firestoreHelpers.updateProposal(user.uid, proposalId, { title, sections, currency, clientId, clientName: clientName || undefined });
 
       const shareId = proposal?.shareId || generateShareId();
       await firestoreHelpers.updateProposal(user.uid, proposalId, {
@@ -288,7 +433,7 @@ export default function ProposalEditorPage() {
   return (
     <div className="-m-4 sm:-m-6 lg:-m-8 flex flex-col h-[calc(100vh-4.5rem)] bg-[#fcfcfd]">
       {/* Sticky Top Control Toolbar */}
-      <div className="bg-white border-b border-[#e4e4e7] px-4 py-3 flex items-center justify-between gap-3 shrink-0 z-20">
+      <div className="bg-white border-b border-[#e4e4e7] px-4 py-3 flex items-center justify-between gap-3 shrink-0 z-20 print:hidden">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Button
             variant="ghost"
@@ -340,6 +485,31 @@ export default function ProposalEditorPage() {
             <option value="draft">Draft</option>
             <option value="live">Live</option>
           </select>
+
+          {/* Currency Selector */}
+          <select
+            value={currency}
+            onChange={(e) => handleCurrencyChange(e.target.value)}
+            className="text-xs font-bold px-2.5 py-1 rounded-full border border-[#e4e4e7] bg-white cursor-pointer appearance-none outline-none shrink-0 text-[#09090b]"
+            title="Change currency"
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.value}</option>
+            ))}
+          </select>
+
+          {/* Client Selector */}
+          <select
+            value={clientId || ''}
+            onChange={(e) => handleClientChange(e.target.value)}
+            className="text-xs font-medium px-2.5 py-1 rounded-full border border-[#e4e4e7] bg-white cursor-pointer appearance-none outline-none shrink-0 text-[#09090b] max-w-[140px] truncate"
+            title="Assign client"
+          >
+            <option value="">No Client</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* Right Toolbar Actions */}
@@ -369,6 +539,37 @@ export default function ProposalEditorPage() {
           >
             <Layers className="h-3.5 w-3.5" />
             <span>Template</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDuplicate}
+            loading={duplicating}
+            className="font-semibold text-xs gap-1.5 hidden sm:inline-flex"
+            title="Duplicate proposal"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLoadVersions}
+            className="font-semibold text-xs gap-1.5 hidden sm:inline-flex"
+            title="Version history"
+          >
+            <span className="text-xs"> History</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPdf}
+            className="font-semibold text-xs gap-1.5 hidden sm:inline-flex"
+            title="Export as PDF"
+          >
+            <Download className="h-3.5 w-3.5" />
           </Button>
 
           {/* Go Live / Share button */}
@@ -418,7 +619,7 @@ export default function ProposalEditorPage() {
         {/* Left Section Manager Drawer */}
         <div
           className={cn(
-            'border-r border-[#e4e4e7] bg-[#fafafa] transition-all duration-300 flex flex-col shrink-0',
+            'border-r border-[#e4e4e7] bg-[#fafafa] transition-all duration-300 flex flex-col shrink-0 print:hidden',
             sidebarOpen ? 'w-72' : 'w-0 overflow-hidden border-r-0'
           )}
         >
@@ -467,7 +668,7 @@ export default function ProposalEditorPage() {
                   )}
                 >
                   {/* Section Title Bar */}
-                  <div className="px-6 py-4 border-b border-[#f4f4f5] flex items-center justify-between gap-3 bg-[#fafafa]/60">
+                  <div className="px-6 py-4 border-b border-[#f4f4f5] flex items-center justify-between gap-3 bg-[#fafafa]/60 print:hidden">
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
                       <span className="text-xs font-mono font-bold text-[#71717a]">{idx + 1}.</span>
                       <input
@@ -478,9 +679,24 @@ export default function ProposalEditorPage() {
                         placeholder="Section Title"
                       />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white text-[#71717a] border border-[#e4e4e7] px-2.5 py-0.5 rounded-full shrink-0">
-                      {section.type}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {section.type !== 'cover' && section.type !== 'pricing' && section.type !== 'timeline' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleGenerateSection(section.id)}
+                          loading={generatingSection === section.id}
+                          className="text-xs font-semibold gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                          title="Generate with AI"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">AI</span>
+                        </Button>
+                      )}
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-white text-[#71717a] border border-[#e4e4e7] px-2.5 py-0.5 rounded-full shrink-0">
+                        {section.type}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Section Content View */}
@@ -517,7 +733,7 @@ export default function ProposalEditorPage() {
                       <PricingTable
                         data={section.content as PricingTableData}
                         onChange={(data) => handleSectionContentChange(section.id, data)}
-                        currency={proposal?.currency || 'USD'}
+                        currency={currency}
                       />
                     ) : section.type === 'timeline' ? (
                       <Timeline
@@ -537,7 +753,9 @@ export default function ProposalEditorPage() {
             )}
 
             {/* Bottom floating inserter */}
-            <AddSectionFloating onAdd={handleAddSection} />
+            <div className="print:hidden">
+              <AddSectionFloating onAdd={handleAddSection} />
+            </div>
           </div>
         </div>
       </div>
@@ -604,6 +822,66 @@ export default function ProposalEditorPage() {
           open={saveAsTemplateOpen}
           onClose={() => setSaveAsTemplateOpen(false)}
         />
+      )}
+
+      {/* Version History Modal */}
+      {versionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" onClick={() => setVersionModalOpen(false)}>
+          <div className="w-full max-w-lg max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <Card className="shadow-2xl border-[#e4e4e7] overflow-hidden">
+              <div className="p-6 border-b border-[#f4f4f5]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-xl bg-[#09090b] text-[#d4ff00] flex items-center justify-center">
+                      <span className="text-xs font-bold">v</span>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-[#09090b]">Version History</h3>
+                      <p className="text-xs text-[#71717a]">Restore a previous version of this proposal</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setVersionModalOpen(false)} className="p-1 rounded-lg text-[#a1a1aa] hover:text-[#09090b] transition-colors cursor-pointer">
+                    <span className="text-lg">&times;</span>
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {versions.length === 0 ? (
+                  <div className="text-center py-8 text-[#71717a] text-xs">
+                    No versions saved yet. Versions are created automatically when you go live.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {versions.map((version) => (
+                      <div
+                        key={version.id}
+                        className="p-4 rounded-2xl border border-[#e4e4e7] bg-white hover:border-[#d4d4d8] transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-[#09090b]">{version.title || 'Untitled'}</p>
+                            <p className="text-xs text-[#71717a] mt-0.5">
+                              {version.sections?.length || 0} sections &middot; {version.currency || 'USD'}
+                              {version.createdAt && ` &middot; ${new Date(version.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRestoreVersion(version.id)}
+                            className="font-bold text-xs"
+                          >
+                            Restore
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
       )}
     </div>
   );

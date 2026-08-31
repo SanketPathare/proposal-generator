@@ -107,6 +107,7 @@ export interface Proposal {
   id: string;
   userId: string;
   clientId: string | null;
+  clientName?: string;
   title: string;
   purpose: string;
   status: ProposalStatus;
@@ -124,8 +125,19 @@ export interface Proposal {
   rejectedAt: Date | null;
   clientSignName: string | null;
   clientEmail: string | null;
+  acceptors?: ProposalAcceptor[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface ProposalAcceptor {
+  id?: string;
+  clientSignName: string;
+  clientEmail: string;
+  clientMobile?: string;
+  clientMessage?: string;
+  acceptedAt: Date;
+  message?: string;
 }
 
 export interface Template {
@@ -249,5 +261,16 @@ export interface AppNotification {
   proposalId: string | null;
   proposalTitle: string | null;
   read: boolean;
+  createdAt: Date;
+}
+
+export interface ProposalVersion {
+  id: string;
+  proposalId: string;
+  userId: string;
+  title: string;
+  sections: ProposalSection[];
+  pricing: PricingTableData | null;
+  currency: string;
   createdAt: Date;
 }

@@ -8,17 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { CheckCircle2, DollarSign } from 'lucide-react';
-
-const CURRENCIES = [
-  { value: 'USD', label: 'USD ($) - US Dollar' },
-  { value: 'EUR', label: 'EUR (€) - Euro' },
-  { value: 'GBP', label: 'GBP (£) - British Pound' },
-  { value: 'INR', label: 'INR (₹) - Indian Rupee' },
-  { value: 'CAD', label: 'CAD ($) - Canadian Dollar' },
-  { value: 'AUD', label: 'AUD ($) - Australian Dollar' },
-  { value: 'SGD', label: 'SGD ($) - Singapore Dollar' },
-  { value: 'AED', label: 'AED (د.إ) - UAE Dirham' },
-];
+import { CURRENCIES } from '@/lib/utils';
 
 const LANGUAGES = [
   { value: 'en', label: 'English (US / UK)' },
@@ -26,6 +16,11 @@ const LANGUAGES = [
   { value: 'fr', label: 'French' },
   { value: 'de', label: 'German' },
   { value: 'hi', label: 'Hindi' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'ko', label: 'Korean' },
+  { value: 'zh', label: 'Chinese' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'ar', label: 'Arabic' },
 ];
 
 export default function ProposalSettingsPage() {
@@ -107,7 +102,7 @@ export default function ProposalSettingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Default Currency"
-              options={CURRENCIES}
+              options={CURRENCIES.map((c) => ({ value: c.value, label: c.label }))}
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
             />

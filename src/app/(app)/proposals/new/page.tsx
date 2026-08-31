@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { generateId } from '@/lib/utils';
+import { Select } from '@/components/ui/Select';
+import { generateId, CURRENCIES } from '@/lib/utils';
 import {
   Sparkles,
   Layers,
@@ -71,13 +72,14 @@ const BUILTIN_TEMPLATES = [
 ];
 
 export default function CreateProposalPage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const router = useRouter();
 
   const [mode, setMode] = useState<'ai' | 'template' | 'blank'>('ai');
   const [purpose, setPurpose] = useState('');
   const [clientName, setClientName] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('web-dev');
+  const [currency, setCurrency] = useState(settings?.currency || 'USD');
 
   // AI Inputs
   const [projectDescription, setProjectDescription] = useState('');
@@ -111,6 +113,7 @@ export default function CreateProposalPage() {
           initialSections = tmpl.sections.map((s) => ({
             ...s,
             id: generateId(),
+            content: s.type === 'pricing' && s.content && typeof s.content === 'object' ? { ...(s.content as Record<string, unknown>), currency } : s.content,
           }));
         }
       } else if (mode === 'ai') {
@@ -166,7 +169,7 @@ export default function CreateProposalPage() {
               id: generateId(),
               type: 'pricing',
               title: 'Pricing & Terms',
-              content: { rows: [{ id: 'r1', item: purpose.trim(), description: 'Complete deliverables package', quantity: 1, unitPrice: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500, total: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500 }], subtotal: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500, currency: 'USD' },
+              content: { rows: [{ id: 'r1', item: purpose.trim(), description: 'Complete deliverables package', quantity: 1, unitPrice: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500, total: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500 }], subtotal: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: parseFloat(budget.replace(/[^0-9.]/g, '')) || 3500, currency },
               order: 3,
             },
           ];
@@ -197,7 +200,7 @@ export default function CreateProposalPage() {
         purpose: clientName.trim() ? `Prepared for ${clientName.trim()}` : purpose.trim(),
         status: 'draft',
         templateId: mode === 'template' ? selectedTemplate : null,
-        currency: 'USD',
+        currency,
         sections: initialSections,
         pricing: null,
         shareId: null,
@@ -345,6 +348,14 @@ export default function CreateProposalPage() {
               placeholder="e.g. Acme Corporation"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Currency"
+              options={CURRENCIES.map((c) => ({ value: c.value, label: c.label }))}
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
             />
           </div>
         </CardContent>

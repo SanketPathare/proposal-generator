@@ -186,6 +186,14 @@ export default function MyTemplatesPage() {
                       Use Template
                     </Button>
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/templates/create?edit=${template.id}`)}
+                      title="Edit template"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="sm"
                       loading={duplicatingId === template.id}

@@ -7,7 +7,7 @@ import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Proposal, ProposalAcceptor } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatCurrency } from '@/lib/utils';
 import {
   CheckCircle2,
   Search,
