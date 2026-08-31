@@ -16,7 +16,7 @@ import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel } 
 import {
   ArrowLeft,
   Save,
-  Share2,
+  Zap,
   ExternalLink,
   Layers,
   Plus,
@@ -28,6 +28,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
+  Radio,
 } from 'lucide-react';
 
 function AddSectionFloating({ onAdd }: { onAdd: (type: SectionType) => void }) {
@@ -211,33 +212,47 @@ export default function ProposalEditorPage() {
     scheduleAutoSave();
   };
 
-  const handleShare = async () => {
+  const handleGoLive = async () => {
     if (!user || !proposalId) return;
     setSharing(true);
     try {
+      // Save any pending edits first
+      await firestoreHelpers.updateProposal(user.uid, proposalId, { title, sections });
+
       const shareId = proposal?.shareId || generateShareId();
       await firestoreHelpers.updateProposal(user.uid, proposalId, {
         shareId,
-        status: status === 'draft' ? 'sent' : status,
+        status: 'live',
         sharedAt: new Date(),
       });
       await firestoreHelpers.createSharedProposal(shareId, user.uid, proposalId);
-      setStatus((prev) => (prev === 'draft' ? 'sent' : prev));
+      setStatus('live');
+      if (proposal) setProposal({ ...proposal, shareId, status: 'live' });
       const link = `${window.location.origin}/shared/${shareId}`;
       setShareLink(link);
       setShareModalOpen(true);
     } catch (err) {
-      console.error('Failed to share proposal:', err);
-      setError('Failed to generate share link.');
+      console.error('Failed to go live:', err);
+      setError('Failed to generate live link. Please try again.');
     } finally {
       setSharing(false);
     }
   };
 
-  const copyShareLink = () => {
-    navigator.clipboard.writeText(shareLink);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+  const handleCopyLiveLink = async () => {
+    if (!proposal?.shareId) {
+      // If for some reason they got here without a shareId, generate it
+      await handleGoLive();
+      return;
+    }
+    const link = `${window.location.origin}/shared/${proposal.shareId}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Clipboard copy failed:', err);
+    }
   };
 
   if (loading) {
@@ -301,12 +316,17 @@ export default function ProposalEditorPage() {
             className="text-base font-bold text-[#09090b] bg-transparent border-b border-transparent hover:border-[#e4e4e7] focus:border-[#09090b] outline-none px-2 py-0.5 max-w-sm sm:max-w-md truncate"
           />
 
-          {/* Status Badge Dropdown */}
+          {/* Status Badge — Draft / Live only */}
           <select
-            value={status}
+            value={status === 'sent' || status === 'viewed' || status === 'live' ? 'live' : 'draft'}
             onChange={(e) => {
-              setStatus(e.target.value as ProposalStatus);
-              scheduleAutoSave();
+              const val = e.target.value as ProposalStatus;
+              if (val === 'live' && !proposal?.shareId) {
+                handleGoLive();
+              } else {
+                setStatus(val);
+                scheduleAutoSave();
+              }
             }}
             className={cn(
               'text-xs font-bold px-3 py-1 rounded-full border-0 cursor-pointer appearance-none outline-none shrink-0',
@@ -314,10 +334,7 @@ export default function ProposalEditorPage() {
             )}
           >
             <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-            <option value="viewed">Viewed</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Declined</option>
+            <option value="live">Live</option>
           </select>
         </div>
 
@@ -350,26 +367,43 @@ export default function ProposalEditorPage() {
             <span>Template</span>
           </Button>
 
-          <Button
-            variant="accent"
-            size="sm"
-            onClick={handleShare}
-            loading={sharing}
-            className="font-bold text-xs gap-1.5"
-          >
-            <Share2 className="h-3.5 w-3.5" />
-            <span>Share Link</span>
-          </Button>
-
-          {proposal?.shareId && (
+          {/* Go Live / Share button */}
+          {status === 'live' || status === 'sent' || status === 'viewed' ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLiveLink}
+                className="font-bold text-xs gap-1.5 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+              >
+                {copiedLink ? (
+                  <><Check className="h-3.5 w-3.5" /> Copied!</>
+                ) : (
+                  <><Radio className="h-3.5 w-3.5" /> Copy Live Link</>
+                )}
+              </Button>
+              {proposal?.shareId && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/shared/${proposal.shareId}`, '_blank')}
+                  className="p-2 rounded-full"
+                  title="Preview Client View"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </>
+          ) : (
             <Button
-              variant="outline"
+              variant="accent"
               size="sm"
-              onClick={() => window.open(`/shared/${proposal.shareId}`, '_blank')}
-              className="p-2 h-8.5 w-8.5 rounded-full"
-              title="Preview Client View"
+              onClick={handleGoLive}
+              loading={sharing}
+              className="font-bold text-xs gap-1.5"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
+              <Zap className="h-3.5 w-3.5" />
+              <span>Go Live</span>
             </Button>
           )}
         </div>
@@ -511,12 +545,12 @@ export default function ProposalEditorPage() {
             <Card className="shadow-2xl border-[#e4e4e7] overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="h-8 w-8 rounded-xl bg-[#09090b] text-[#d4ff00] flex items-center justify-center">
-                    <Share2 className="h-4 w-4" />
+                  <div className="h-8 w-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
+                    <Radio className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#09090b]">Proposal Ready to Share</h3>
-                    <p className="text-xs text-[#71717a]">Clients can view, review, and accept this proposal.</p>
+                    <h3 className="text-base font-bold text-[#09090b]">Proposal is Now Live! 🎉</h3>
+                    <p className="text-xs text-[#71717a]">Companies can now view and send accept requests.</p>
                   </div>
                 </div>
 
@@ -527,13 +561,17 @@ export default function ProposalEditorPage() {
                     readOnly
                     className="flex-1 text-xs font-mono bg-transparent outline-none text-[#09090b] select-all truncate"
                   />
-                  <Button variant="primary" size="sm" onClick={copyShareLink} className="font-bold text-xs shrink-0">
+                  <Button variant="primary" size="sm" onClick={() => { navigator.clipboard.writeText(shareLink); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); }} className="font-bold text-xs shrink-0">
                     {copiedLink ? (
                       <span className="flex items-center gap-1 text-[#d4ff00]"><Check className="h-3.5 w-3.5" /> Copied</span>
                     ) : (
                       'Copy Link'
                     )}
                   </Button>
+                </div>
+
+                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-800 mb-4">
+                  <strong>How it works:</strong> Share this link with companies. They can view the proposal and submit an accept request. You'll see all requests in the <strong>Accept Requests</strong> page.
                 </div>
 
                 <div className="flex items-center justify-between pt-2">
@@ -543,7 +581,7 @@ export default function ProposalEditorPage() {
                     className="font-semibold text-xs"
                     onClick={() => window.open(shareLink, '_blank')}
                   >
-                    <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open Client View
+                    <ExternalLink className="h-3.5 w-3.5 mr-1" /> Preview as Company
                   </Button>
                   <Button variant="primary" size="sm" onClick={() => setShareModalOpen(false)}>
                     Done

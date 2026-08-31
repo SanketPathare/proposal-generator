@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDbInstance } from '@/lib/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
   try {
-    const { shareId, action, clientSignName, clientEmail } = await request.json();
+    const body = await request.json();
+    const { shareId, action, clientSignName, clientEmail, clientMobile, clientMessage } = body;
 
     if (!shareId || !action) {
       return NextResponse.json({ error: 'shareId and action are required' }, { status: 400 });
     }
 
-    if (!['accept', 'reject'].includes(action)) {
+    if (!['accept', 'reject', 'undo_accept'].includes(action)) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
@@ -24,23 +26,53 @@ export async function POST(request: NextRequest) {
         const { userId, proposalId } = sharedSnap.data()!;
 
         if (userId && proposalId) {
-          const proposalRef = db.collection('users').doc(userId).collection('proposals').doc(proposalId);
+          const proposalRef = db
+            .collection('users')
+            .doc(userId)
+            .collection('proposals')
+            .doc(proposalId);
           const proposalSnap = await proposalRef.get();
 
           if (proposalSnap.exists) {
-            const updateData: Record<string, any> = {
-              status: action === 'accept' ? 'accepted' : 'rejected',
-            };
+            const proposalData = proposalSnap.data()!;
 
             if (action === 'accept') {
-              updateData.acceptedAt = new Date();
-              if (clientSignName) updateData.clientSignName = clientSignName;
-              if (clientEmail) updateData.clientEmail = clientEmail;
-            } else {
-              updateData.rejectedAt = new Date();
-            }
+              const newAcceptor = {
+                id: Date.now().toString(36) + Math.random().toString(36).substring(2, 10),
+                clientSignName: clientSignName || '',
+                clientEmail: clientEmail || '',
+                clientMobile: clientMobile || '',
+                clientMessage: clientMessage || '',
+                acceptedAt: new Date(),
+              };
 
-            await proposalRef.update(updateData);
+              await proposalRef.update({
+                status: 'accepted',
+                acceptors: FieldValue.arrayUnion(newAcceptor),
+                // keep a legacy flat field for backward compat
+                clientSignName: clientSignName || proposalData.clientSignName || '',
+                clientEmail: clientEmail || proposalData.clientEmail || '',
+                acceptedAt: new Date(),
+              });
+            } else if (action === 'undo_accept') {
+              const currentAcceptors: any[] = proposalData.acceptors || [];
+              const updatedAcceptors = currentAcceptors.filter(
+                (a: any) =>
+                  !(a.clientEmail === clientEmail && a.clientSignName === clientSignName)
+              );
+
+              const newStatus = updatedAcceptors.length > 0 ? 'accepted' : 'viewed';
+              await proposalRef.update({
+                acceptors: updatedAcceptors,
+                status: newStatus,
+              });
+            } else {
+              // reject
+              await proposalRef.update({
+                status: 'rejected',
+                rejectedAt: new Date(),
+              });
+            }
           }
         }
       }

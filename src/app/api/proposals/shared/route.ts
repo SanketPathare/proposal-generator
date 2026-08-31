@@ -58,16 +58,24 @@ export async function POST(request: NextRequest) {
       await proposalRef.update({
         viewCount: (proposalData.viewCount || 0) + 1,
         lastViewedAt: new Date(),
-        status: proposalData.status === 'sent' ? 'viewed' : proposalData.status,
+        status: (proposalData.status === 'sent' || proposalData.status === 'viewed') ? 'live' : proposalData.status,
       });
     } catch {
       // Ignore — view count update is not critical
     }
 
+    // Serialize acceptors array — convert any nested Firestore Timestamps
+    const rawAcceptors: any[] = proposalData.acceptors || [];
+    const acceptors = rawAcceptors.map((a: any) => ({
+      ...a,
+      acceptedAt: a.acceptedAt?.toDate?.() || a.acceptedAt || null,
+    }));
+
     return NextResponse.json({
       proposal: {
         ...proposalData,
         id: proposalSnap.id,
+        acceptors,
         createdAt: proposalData.createdAt?.toDate?.() || proposalData.createdAt || new Date(),
         updatedAt: proposalData.updatedAt?.toDate?.() || proposalData.updatedAt || new Date(),
         acceptedAt: proposalData.acceptedAt?.toDate?.() || proposalData.acceptedAt || null,

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Proposal, PricingTableData, TimelineMilestone } from '@/types';
+import { Proposal, ProposalAcceptor, PricingTableData, TimelineMilestone } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   Sparkles,
@@ -18,6 +18,9 @@ import {
   Printer,
   ShieldCheck,
   Check,
+  Phone,
+  MessageSquare,
+  Undo2,
 } from 'lucide-react';
 
 export default function SharedProposalPage() {
@@ -33,8 +36,10 @@ export default function SharedProposalPage() {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [clientSignName, setClientSignName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [clientMobile, setClientMobile] = useState('');
+  const [clientMessage, setClientMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
+
 
   // Print / PDF ref
   const printRef = useRef<HTMLDivElement>(null);
@@ -91,37 +96,40 @@ export default function SharedProposalPage() {
 
     setSubmitting(true);
     try {
+      const newAcceptor: ProposalAcceptor = {
+        id: Date.now().toString(36) + Math.random().toString(36).substring(2, 10),
+        clientSignName,
+        clientEmail,
+        clientMobile,
+        clientMessage,
+        acceptedAt: new Date(),
+      };
+
       await fetch('/api/proposals/respond', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shareId, action: 'accept', clientSignName, clientEmail }),
-      });
-      if (proposal) {
-        setProposal({
-          ...proposal,
-          status: 'accepted',
+        body: JSON.stringify({
+          shareId,
+          action: 'accept',
           clientSignName,
           clientEmail,
-          acceptedAt: new Date(),
-        });
+          clientMobile,
+          clientMessage,
+        }),
+      });
+
+      if (proposal) {
+        const updatedAcceptors = [...(proposal.acceptors || []), newAcceptor];
+        setProposal({ ...proposal, acceptors: updatedAcceptors, status: 'accepted' });
       }
       setStatus('accepted');
-      setConfirmed(true);
       setAcceptModalOpen(false);
+      setClientSignName('');
+      setClientEmail('');
+      setClientMobile('');
+      setClientMessage('');
     } catch (err) {
       console.error('Accept error:', err);
-      if (proposal) {
-        setProposal({
-          ...proposal,
-          status: 'accepted',
-          clientSignName,
-          clientEmail,
-          acceptedAt: new Date(),
-        });
-      }
-      setStatus('accepted');
-      setConfirmed(true);
-      setAcceptModalOpen(false);
     } finally {
       setSubmitting(false);
     }
@@ -135,6 +143,9 @@ export default function SharedProposalPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shareId, action: 'reject' }),
       });
+      if (proposal) {
+        setProposal({ ...proposal, status: 'rejected', rejectedAt: new Date() });
+      }
       setStatus('rejected');
     } catch (err) {
       console.error('Reject error:', err);
@@ -188,8 +199,8 @@ export default function SharedProposalPage() {
               <Sparkles className="h-4 w-4 fill-[#d4ff00]" />
             </div>
             <div>
-              <span className="font-extrabold text-sm text-[#09090b] tracking-tight">Proposal Preview</span>
-              <span className="text-[10px] text-[#71717a] block font-mono">ID: {shareId}</span>
+          <span className="font-extrabold text-sm text-[#09090b] tracking-tight">Proposal Preview</span>
+              <span className="text-[10px] text-[#71717a] block">Live &amp; accepting requests</span>
             </div>
           </div>
 
@@ -210,17 +221,22 @@ export default function SharedProposalPage() {
             >
               <Printer className="h-3.5 w-3.5 mr-1" /> Print
             </Button>
-
-            {status === 'accepted' || confirmed ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 text-white text-xs font-bold shadow-sm">
-                <CheckCircle2 className="h-4 w-4" /> Accepted & Signed
-              </span>
-            ) : status === 'rejected' ? (
-              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm">
-                <XCircle className="h-4 w-4" /> Declined
-              </span>
+            {status === 'rejected' ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm">
+                  <XCircle className="h-4 w-4" /> Declined
+                </span>
+                <Button
+                  variant="accent"
+                  size="sm"
+                  onClick={() => setAcceptModalOpen(true)}
+                  className="text-xs font-bold text-black shadow-sm"
+                >
+                  <Check className="h-3.5 w-3.5 mr-1 stroke-[3]" /> Send Request
+                </Button>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleDecline} className="text-xs font-semibold text-rose-600 hover:bg-rose-50">
                   Decline
                 </Button>
@@ -230,55 +246,17 @@ export default function SharedProposalPage() {
                   onClick={() => setAcceptModalOpen(true)}
                   className="text-xs font-bold text-black shadow-sm"
                 >
-                  <Check className="h-3.5 w-3.5 mr-1 stroke-[3]" /> Accept Proposal
+                  <Check className="h-3.5 w-3.5 mr-1 stroke-[3]" /> Send Request
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Document Content — ref used by react-to-print */}
+      {/* Main Document Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         <div ref={printRef} data-print-root className="space-y-8">
-        {/* Confirmed / Accepted Banner */}
-        {(confirmed || status === 'accepted') && (
-          <div className="p-5 sm:p-6 bg-emerald-50 border border-emerald-200 rounded-3xl animate-in fade-in-0 duration-300">
-            <div className="flex items-start gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <Check className="h-5 w-5 stroke-[3]" />
-              </div>
-              <div className="flex-1 space-y-3">
-                <div>
-                  <h3 className="font-extrabold text-sm sm:text-base text-emerald-900">Proposal Officially Accepted & Signed</h3>
-                  <p className="text-xs text-emerald-700 mt-0.5">
-                    This proposal has been digitally signed and accepted. The creator has been notified to initiate project onboarding.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {(clientSignName || proposal?.clientSignName) && (
-                    <div className="bg-white/60 rounded-2xl p-3 border border-emerald-100">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Signed By</p>
-                      <p className="text-sm font-bold text-emerald-900">{clientSignName || proposal?.clientSignName}</p>
-                    </div>
-                  )}
-                  {(clientEmail || proposal?.clientEmail) && (
-                    <div className="bg-white/60 rounded-2xl p-3 border border-emerald-100">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Email</p>
-                      <p className="text-sm font-bold text-emerald-900">{clientEmail || proposal?.clientEmail}</p>
-                    </div>
-                  )}
-                  {(proposal?.acceptedAt) && (
-                    <div className="bg-white/60 rounded-2xl p-3 border border-emerald-100">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Accepted On</p>
-                      <p className="text-sm font-bold text-emerald-900">{formatDate(proposal.acceptedAt)}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Render Sections */}
         {sortedSections.map((section, idx) => {
@@ -346,7 +324,6 @@ export default function SharedProposalPage() {
                   </table>
                 </div>
 
-                {/* Pricing Totals */}
                 <div className="flex justify-end pt-4 border-t border-[#f4f4f5]">
                   <div className="w-72 space-y-2 text-xs">
                     <div className="flex justify-between text-[#71717a]">
@@ -410,14 +387,11 @@ export default function SharedProposalPage() {
             );
           }
 
-          // HTML text section
           let htmlContent = '';
           if (typeof section.content === 'string') {
             htmlContent = section.content;
           } else if (section.content?.html) {
             htmlContent = section.content.html;
-          } else if (typeof section.content === 'object') {
-            htmlContent = JSON.stringify(section.content);
           }
 
           if (!htmlContent) return null;
@@ -436,12 +410,16 @@ export default function SharedProposalPage() {
         })}
 
         {/* Bottom Accept Action Box */}
-        {status !== 'accepted' && !confirmed && status !== 'rejected' && (
+        {status !== 'rejected' && (
           <div className="p-8 bg-[#09090b] text-white rounded-3xl text-center space-y-4 shadow-xl print:hidden" data-html2canvas-ignore="true">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#d4ff00]">Ready to kick-off?</span>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Accept and approve this proposal</h3>
+            <span className="text-xs font-bold uppercase tracking-widest text-[#d4ff00]">
+              Interested in this proposal?
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
+              Send an Accept Request
+            </h3>
             <p className="text-xs text-neutral-400 max-w-md mx-auto">
-              Confirm acceptance online with a digital sign-off to initiate project work.
+              Fill in your details and send an accept request to the proposal creator.
             </p>
             <Button
               variant="accent"
@@ -449,7 +427,7 @@ export default function SharedProposalPage() {
               onClick={() => setAcceptModalOpen(true)}
               className="font-bold text-black shadow-md hover:scale-105"
             >
-              <Check className="h-4 w-4 mr-2 stroke-[3]" /> Accept & Sign Proposal
+              <Check className="h-4 w-4 mr-2 stroke-[3]" /> Send Accept Request
             </Button>
           </div>
         )}
@@ -467,8 +445,8 @@ export default function SharedProposalPage() {
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#09090b]">Accept Proposal</h3>
-                    <p className="text-xs text-[#71717a]">Enter your signature details to approve.</p>
+                    <h3 className="text-base font-bold text-[#09090b]">Send Accept Request</h3>
+                    <p className="text-xs text-[#71717a]">Fill in your company details to send an accept request.</p>
                   </div>
                 </div>
 
@@ -501,6 +479,38 @@ export default function SharedProposalPage() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#52525b] mb-1.5">
+                      Mobile Number (Optional)
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#a1a1aa]" />
+                      <input
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                        value={clientMobile}
+                        onChange={(e) => setClientMobile(e.target.value)}
+                        className="w-full h-11 pl-10 pr-4 text-sm font-medium border border-[#e4e4e7] rounded-xl outline-none focus:border-[#09090b]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#52525b] mb-1.5">
+                      Message / Notes (Optional)
+                    </label>
+                    <div className="relative">
+                      <MessageSquare className="absolute left-3.5 top-3 h-4 w-4 text-[#a1a1aa]" />
+                      <textarea
+                        placeholder="Any additional notes or comments..."
+                        value={clientMessage}
+                        onChange={(e) => setClientMessage(e.target.value)}
+                        rows={3}
+                        className="w-full pl-10 pr-4 py-2.5 text-sm font-medium border border-[#e4e4e7] rounded-xl outline-none focus:border-[#09090b] resize-none"
+                      />
+                    </div>
+                  </div>
+
                   <div className="p-3 bg-[#f4f4f5] rounded-xl text-[11px] text-[#52525b] leading-relaxed">
                     By clicking &ldquo;Confirm & Sign&rdquo;, you accept the scope of work, timeline, and investment terms outlined in this proposal.
                   </div>
@@ -516,7 +526,7 @@ export default function SharedProposalPage() {
                       className="font-bold text-black shadow-xs"
                       loading={submitting}
                     >
-                      Confirm & Sign
+                      Confirm & Send Request
                     </Button>
                   </div>
                 </form>
@@ -525,6 +535,7 @@ export default function SharedProposalPage() {
           </div>
         </div>
       )}
+
 
       {/* Footer */}
       <footer className="border-t border-[#e4e4e7] bg-white py-8 mt-16 text-center text-xs text-[#71717a]">

@@ -53,8 +53,8 @@ export default function DashboardPage() {
   };
 
   const totalViews = proposals.reduce((sum, p) => sum + (p.viewCount || 0), 0);
-  const acceptedProposals = proposals.filter((p) => p.status === 'accepted').length;
-  const winRate = proposals.length > 0 ? Math.round((acceptedProposals / proposals.length) * 100) : 0;
+  const totalAcceptRequests = proposals.reduce((sum, p) => sum + (p.acceptors?.length ?? 0), 0);
+  const liveProposals = proposals.filter((p) => p.status === 'live' || p.status === 'sent' || p.status === 'viewed').length;
 
   const displayName = profile?.fullName || branding?.brandName || (user?.email ? user.email.split('@')[0] : 'Creator');
 
@@ -126,34 +126,35 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        {/* Stat 3 */}
+        {/* Stat 3 - Accept Requests */}
         <Card hoverEffect className="p-5 flex flex-col justify-between cursor-pointer" onClick={() => router.push('/accepted')}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#71717a]">Accepted Deals</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#71717a]">Accept Requests</span>
             <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-3xl font-extrabold text-[#09090b] tracking-tight">{acceptedProposals}</p>
+            <p className="text-3xl font-extrabold text-[#09090b] tracking-tight">{totalAcceptRequests}</p>
             <p className="text-[11px] text-[#71717a] mt-1 flex items-center gap-1">
-              <span className="text-emerald-600 font-semibold">{winRate}% conversion</span> rate
+              <span className="text-emerald-600 font-semibold">Companies</span> sent requests
             </p>
           </div>
         </Card>
 
-        {/* Stat 4 */}
+        {/* Stat 4 - Live Proposals */}
         <Card hoverEffect className="p-5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#71717a]">Active Clients</span>
-            <div className="h-8 w-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-700">
-              <Users className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[#71717a]">Live Proposals</span>
+            <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700">
+              <TrendingUp className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-3xl font-extrabold text-[#09090b] tracking-tight">{clients.length}</p>
+            <p className="text-3xl font-extrabold text-[#09090b] tracking-tight">{liveProposals}</p>
             <p className="text-[11px] text-[#71717a] mt-1 flex items-center gap-1">
-              <span className="text-[#09090b] font-semibold">Client directory</span> total
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-emerald-600 font-semibold">Currently live</span> &amp; accepting
             </p>
           </div>
         </Card>

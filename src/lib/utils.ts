@@ -57,6 +57,12 @@ export function formatDateTime(date: Date | string | null | undefined): string {
 
 export function getStatusBadgeStyle(status: string): { bg: string; text: string; dot: string } {
   switch (status?.toLowerCase()) {
+    case 'live':
+      return {
+        bg: 'bg-emerald-500/15 text-emerald-700 border border-emerald-500/30',
+        text: 'text-emerald-700 font-semibold',
+        dot: 'bg-emerald-500 animate-pulse',
+      };
     case 'accepted':
       return {
         bg: 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20',
@@ -105,7 +111,8 @@ export function getStatusColor(status: string): string {
 export function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     draft: 'Draft',
-    sent: 'Sent',
+    live: 'Live',
+    sent: 'Live',     // backward compat — old 'sent' shows as 'Live'
     viewed: 'Viewed',
     accepted: 'Accepted',
     rejected: 'Declined',

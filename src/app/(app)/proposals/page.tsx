@@ -26,11 +26,10 @@ import {
   Mail,
 } from 'lucide-react';
 
-const FILTER_TABS: { value: ProposalStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Proposals' },
-  { value: 'draft', label: 'Drafts' },
-  { value: 'sent', label: 'Sent' },
-  { value: 'viewed', label: 'Viewed' },
+const FILTER_TABS: { value: ProposalStatus | 'all' | 'live_all'; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'live_all', label: 'Live' },
   { value: 'accepted', label: 'Accepted' },
   { value: 'rejected', label: 'Declined' },
 ];
@@ -41,7 +40,7 @@ export default function ProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'all' | 'live_all'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -66,7 +65,10 @@ export default function ProposalsPage() {
 
   const filteredProposals = useMemo(() => {
     let result = proposals;
-    if (statusFilter !== 'all') {
+    if (statusFilter === 'live_all') {
+      // 'live' tab catches both new 'live' and old 'sent'/'viewed' statuses
+      result = result.filter((p) => p.status === 'live' || p.status === 'sent' || p.status === 'viewed');
+    } else if (statusFilter !== 'all') {
       result = result.filter((p) => p.status === statusFilter);
     }
     if (search.trim()) {
@@ -134,6 +136,8 @@ export default function ProposalsPage() {
             const count =
               tab.value === 'all'
                 ? proposals.length
+                : tab.value === 'live_all'
+                ? proposals.filter((p) => p.status === 'live' || p.status === 'sent' || p.status === 'viewed').length
                 : proposals.filter((p) => p.status === tab.value).length;
             const isSelected = statusFilter === tab.value;
 
@@ -244,23 +248,16 @@ export default function ProposalsPage() {
                     </span>
                   </div>
 
-                  {/* Accepted Info Banner */}
-                  {proposal.status === 'accepted' && proposal.clientSignName && (
-                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl space-y-1">
+                  {/* Accept Requests Banner */}
+                  {(proposal.acceptors?.length ?? 0) > 0 && (
+                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Accepted & Signed
+                        <CheckCircle2 className="h-3 w-3" /> {proposal.acceptors.length} Accept {proposal.acceptors.length === 1 ? 'Request' : 'Requests'} Received
                       </p>
-                      <p className="text-xs font-semibold text-emerald-900 flex items-center gap-1">
-                        <User className="h-3 w-3 text-emerald-600" /> {proposal.clientSignName}
+                      <p className="text-xs text-emerald-800 mt-1">
+                        {proposal.acceptors.map(a => a.clientSignName).filter(Boolean).slice(0, 2).join(', ')}
+                        {(proposal.acceptors.length ?? 0) > 2 ? ` +${proposal.acceptors.length - 2} more` : ''}
                       </p>
-                      {proposal.clientEmail && (
-                        <p className="text-xs text-emerald-700 flex items-center gap-1">
-                          <Mail className="h-3 w-3" /> {proposal.clientEmail}
-                        </p>
-                      )}
-                      {proposal.acceptedAt && (
-                        <p className="text-[10px] text-emerald-600">{formatDate(proposal.acceptedAt)}</p>
-                      )}
                     </div>
                   )}
 
@@ -365,18 +362,17 @@ export default function ProposalsPage() {
                           {getStatusLabel(proposal.status)}
                         </span>
                       </td>
-                      {/* Client / Accepted-by column */}
+                      {/* Acceptors / Client column */}
                       <td className="py-4 px-4">
-                        {proposal.status === 'accepted' && proposal.clientSignName ? (
+                        {(proposal.acceptors?.length ?? 0) > 0 ? (
                           <div className="space-y-0.5">
                             <p className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-                              <User className="h-3 w-3" />{proposal.clientSignName}
+                              <CheckCircle2 className="h-3 w-3" />
+                              {proposal.acceptors.length} {proposal.acceptors.length === 1 ? 'Request' : 'Requests'}
                             </p>
-                            {proposal.clientEmail && (
-                              <p className="text-[11px] text-emerald-600 flex items-center gap-1">
-                                <Mail className="h-3 w-3" />{proposal.clientEmail}
-                              </p>
-                            )}
+                            <p className="text-[11px] text-emerald-600 truncate max-w-[140px]">
+                              {proposal.acceptors[0]?.clientSignName}
+                            </p>
                           </div>
                         ) : (
                           <span className="text-[#a1a1aa] text-xs">—</span>

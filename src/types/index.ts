@@ -44,7 +44,7 @@ export interface Client {
   updatedAt: Date;
 }
 
-export type ProposalStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
+export type ProposalStatus = 'draft' | 'live' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
 
 export type SectionType = 
   | 'cover'
