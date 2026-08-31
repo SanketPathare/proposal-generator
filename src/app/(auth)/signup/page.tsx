@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInAnonymously } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth as getAuth } from '@/lib/firebase/client';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
 import { Button } from '@/components/ui/Button';
@@ -54,7 +54,6 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [guestLoading, setGuestLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -164,26 +163,6 @@ export default function SignupPage() {
     }
   };
 
-  const handleGuestDemo = async () => {
-    setGuestLoading(true);
-    setError('');
-    try {
-      const authInstance = getAuth();
-      if (authInstance) {
-        try {
-          await signInAnonymously(authInstance);
-        } catch {
-          // ignore
-        }
-      }
-      router.replace('/dashboard');
-    } catch (err: any) {
-      router.replace('/dashboard');
-    } finally {
-      setGuestLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -280,20 +259,6 @@ export default function SignupPage() {
           Create Free Account
         </Button>
       </form>
-
-      {/* Guest Mode */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={handleGuestDemo}
-          disabled={guestLoading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#f4f4f5] hover:bg-[#e4e4e7] text-xs font-bold text-[#09090b] transition-colors cursor-pointer border border-neutral-200"
-        >
-          <Sparkles className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-          <span>{guestLoading ? 'Starting Guest Session...' : 'Instant Demo / Guest Test Drive'}</span>
-          <ArrowRight className="h-3 w-3 ml-1" />
-        </button>
-      </div>
 
       {/* Footer */}
       <p className="text-center text-xs text-[#71717a]">
