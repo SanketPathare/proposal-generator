@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
-import { Proposal, ProposalSection, ProposalStatus, SectionType, PricingTableData } from '@/types';
+import { Proposal, ProposalSection, ProposalStatus, SectionType, PricingTableData, TemplateStyles } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { ProposalEditor } from '@/components/editor/ProposalEditor';
@@ -12,7 +12,17 @@ import { SectionManager, SECTION_TYPE_DETAILS } from '@/components/editor/Sectio
 import { PricingTable } from '@/components/editor/PricingTable';
 import { Timeline } from '@/components/editor/Timeline';
 import { SaveAsTemplate } from '@/components/editor/SaveAsTemplate';
+import { StylePanel } from '@/components/editor/StylePanel';
 import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel, CURRENCIES, cloneProposal } from '@/lib/utils';
+import { GOOGLE_FONTS } from '@/lib/templates';
+
+const DEFAULT_STYLES: TemplateStyles = {
+  fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+  colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
+  logoPosition: 'left',
+  header: '',
+  footer: '',
+};
 import {
   ArrowLeft,
   Save,
@@ -108,9 +118,26 @@ export default function ProposalEditorPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [styles, setStyles] = useState<TemplateStyles>(DEFAULT_STYLES);
   const [versionModalOpen, setVersionModalOpen] = useState(false);
   const [versions, setVersions] = useState<{ id: string; title: string; sections: ProposalSection[]; pricing: PricingTableData | null; currency: string; createdAt: Date }[]>([]);
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+
+  // Load Google Fonts for selected styles
+  useEffect(() => {
+    const fonts = new Set([styles.fonts.heading, styles.fonts.body]);
+    fonts.forEach((fontName) => {
+      const existing = document.querySelector(`link[data-font="${fontName}"]`);
+      if (existing) return;
+      const font = GOOGLE_FONTS.find((f) => f.name === fontName);
+      if (!font) return;
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${font.import}&display=swap`;
+      link.setAttribute('data-font', fontName);
+      document.head.appendChild(link);
+    });
+  }, [styles.fonts.heading, styles.fonts.body]);
 
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDirtyRef = useRef(false);
@@ -146,6 +173,7 @@ export default function ProposalEditorPage() {
       setCurrency(data.currency || 'USD');
       setClientId(data.clientId || null);
       setClientName(data.clientName || '');
+      setStyles(data.styles || DEFAULT_STYLES);
       setLastSaved(data.updatedAt ? new Date(data.updatedAt) : new Date());
     } catch (err) {
       console.error('Failed to load proposal:', err);
@@ -173,7 +201,7 @@ export default function ProposalEditorPage() {
     autoSaveTimerRef.current = setTimeout(() => {
       saveProposal(true);
     }, 2000);
-  }, [proposalId, title, status, sections, currency, clientId, clientName]);
+  }, [proposalId, title, status, sections, currency, clientId, clientName, styles]);
 
   const saveProposal = async (isAuto = false) => {
     if (!user || !proposalId) return;
@@ -186,6 +214,7 @@ export default function ProposalEditorPage() {
         currency,
         clientId,
         clientName: clientName || undefined,
+        styles,
       });
       setLastSaved(new Date());
       isDirtyRef.current = false;
@@ -362,7 +391,7 @@ export default function ProposalEditorPage() {
       await handleSaveVersion();
 
       // Save any pending edits first
-      await firestoreHelpers.updateProposal(user.uid, proposalId, { title, sections, currency, clientId, clientName: clientName || undefined });
+      await firestoreHelpers.updateProposal(user.uid, proposalId, { title, sections, currency, clientId, clientName: clientName || undefined, styles });
 
       const shareId = proposal?.shareId || generateShareId();
       await firestoreHelpers.updateProposal(user.uid, proposalId, {
@@ -541,6 +570,23 @@ export default function ProposalEditorPage() {
             <span>Template</span>
           </Button>
 
+          {/* Customize Design button — opens StylePanel */}
+          <button
+            onClick={() => {
+              const event = new CustomEvent('toggle-style-panel');
+              window.dispatchEvent(event);
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-full border border-[#e4e4e7] bg-white hover:bg-[#f4f4f5] transition-colors cursor-pointer"
+            title="Customize Design"
+          >
+            <div className="flex -space-x-1">
+              <div className="w-2.5 h-2.5 rounded-full border border-white" style={{ backgroundColor: styles.colors.primary }} />
+              <div className="w-2.5 h-2.5 rounded-full border border-white" style={{ backgroundColor: styles.colors.accent }} />
+              <div className="w-2.5 h-2.5 rounded-full border border-white" style={{ backgroundColor: styles.colors.secondary }} />
+            </div>
+            <span className="hidden sm:inline">Design</span>
+          </button>
+
           <Button
             variant="outline"
             size="sm"
@@ -702,8 +748,8 @@ export default function ProposalEditorPage() {
                   {/* Section Content View */}
                   <div className="p-6">
                     {section.type === 'cover' ? (
-                      <div className="bg-[#09090b] text-white p-8 sm:p-10 rounded-2xl space-y-3 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-[#d4ff00]/10 blur-2xl pointer-events-none" />
+                      <div className="text-white p-8 sm:p-10 rounded-2xl space-y-3 relative overflow-hidden" style={{ backgroundColor: styles.colors.primary }}>
+                        <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-2xl pointer-events-none opacity-20" style={{ backgroundColor: styles.colors.accent }} />
                         <input
                           type="text"
                           value={section.content?.title || ''}
@@ -714,7 +760,7 @@ export default function ProposalEditorPage() {
                             })
                           }
                           placeholder="Proposal Title"
-                          className="w-full text-2xl sm:text-3xl font-extrabold text-white bg-transparent outline-none border-b border-transparent hover:border-white/20 focus:border-[#d4ff00] pb-1"
+                          className="w-full text-2xl sm:text-3xl font-extrabold text-white bg-transparent outline-none border-b border-transparent hover:border-white/20 pb-1"
                         />
                         <input
                           type="text"
@@ -726,7 +772,8 @@ export default function ProposalEditorPage() {
                             })
                           }
                           placeholder="Prepared for Client Name / Subtitle"
-                          className="w-full text-sm text-[#d4ff00] font-semibold bg-transparent outline-none"
+                          className="w-full text-sm font-semibold bg-transparent outline-none"
+                          style={{ color: styles.colors.accent }}
                         />
                       </div>
                     ) : section.type === 'pricing' ? (
@@ -759,6 +806,9 @@ export default function ProposalEditorPage() {
           </div>
         </div>
       </div>
+
+      {/* Style Panel (Design Customization) */}
+      <StylePanel styles={styles} onChange={setStyles} />
 
       {/* Share Modal Dialog */}
       {shareModalOpen && (

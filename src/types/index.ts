@@ -73,6 +73,15 @@ export interface ProposalSection {
   content: any;
   order: number;
   aiGenerated?: boolean;
+  styles?: SectionStyles;
+}
+
+export interface SectionStyles {
+  backgroundColor?: string;
+  textColor?: string;
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg';
+  borderWidth?: 'none' | 'thin' | 'medium';
 }
 
 export interface PricingTableRow {
@@ -115,6 +124,7 @@ export interface Proposal {
   currency: string;
   sections: ProposalSection[];
   pricing: PricingTableData | null;
+  styles?: TemplateStyles;
   shareId: string | null;
   sharedAt: Date | null;
   expiresAt: Date | null;
@@ -229,6 +239,7 @@ export interface ShareableProposal {
   userBranding: UserBranding;
   sections: ProposalSection[];
   pricing: PricingTableData | null;
+  styles?: TemplateStyles;
   status: ProposalStatus;
   sharedAt: Date;
 }

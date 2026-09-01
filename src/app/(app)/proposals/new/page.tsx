@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { generateId, CURRENCIES } from '@/lib/utils';
+import { ALL_TEMPLATES } from '@/lib/templates';
 import {
   Sparkles,
   Layers,
@@ -17,59 +18,10 @@ import {
   ArrowRight,
   Zap,
   CheckCircle2,
-  ChevronRight,
   ArrowLeft,
 } from 'lucide-react';
 
-const BUILTIN_TEMPLATES = [
-  {
-    id: 'web-dev',
-    title: 'Web Development Proposal',
-    description: 'Full-stack Next.js/React website proposal with deliverables, milestones, and pricing table.',
-    tag: 'Engineering',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Web Development Proposal', subtitle: 'Modern High-Performance Web Solution' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Executive Summary', content: '<p>Thank you for the opportunity to partner on this web project. Our objective is to deliver a world-class, responsive, and SEO-optimized web application.</p>', order: 1 },
-      { id: '3', type: 'scope', title: 'Scope of Work', content: '<p>Key development modules include:</p><ul><li>UX/UI Architecture & Design System</li><li>Next.js Frontend & API integration</li><li>Performance Optimization & Analytics</li><li>Comprehensive QA & Cloud Deployment</li></ul>', order: 2 },
-      { id: '4', type: 'pricing', title: 'Investment & Pricing', content: { rows: [{ id: 'r1', item: 'Frontend & Backend Build', description: 'Next.js App with responsive views', quantity: 1, unitPrice: 4500, total: 4500 }, { id: 'r2', item: 'SEO & Analytics Setup', description: 'Technical SEO and tracking', quantity: 1, unitPrice: 800, total: 800 }], subtotal: 5300, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 5300, currency: 'USD' }, order: 3 },
-      { id: '5', type: 'terms', title: 'Terms & Next Steps', content: '<p>50% initial deposit required prior to project kick-off. Final 50% payable upon deployment.</p>', order: 4 },
-    ],
-  },
-  {
-    id: 'uiux',
-    title: 'UI/UX Design & Prototype',
-    description: 'Design system, wireframing, high-fidelity mockups, and interactive prototype.',
-    tag: 'Design',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'UI/UX Design Proposal', subtitle: 'User-Centered Product Design' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Project Overview', content: '<p>We craft intuitive, engaging digital products that delight users and drive business conversions.</p>', order: 1 },
-      { id: '3', type: 'deliverables', title: 'Design Deliverables', content: '<ul><li>User Persona Research & Flow Mapping</li><li>Component Design System (Figma)</li><li>Interactive Prototype & Handoff</li></ul>', order: 2 },
-      { id: '4', type: 'pricing', title: 'Project Pricing', content: { rows: [{ id: 'r1', item: 'Figma Design System & Screens', description: 'Up to 15 key views', quantity: 1, unitPrice: 3800, total: 3800 }], subtotal: 3800, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 3800, currency: 'USD' }, order: 3 },
-    ],
-  },
-  {
-    id: 'marketing',
-    title: 'Growth & Digital Marketing',
-    description: 'SEO, paid acquisition, conversion optimization, and monthly growth roadmap.',
-    tag: 'Growth',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Growth Marketing Proposal', subtitle: 'Targeted Customer Acquisition Strategy' }, order: 0 },
-      { id: '2', type: 'scope', title: 'Strategy & Channels', content: '<p>Comprehensive growth strategy covering Organic Search, Google/Meta Ads, and Content Marketing.</p>', order: 1 },
-      { id: '3', type: 'pricing', title: 'Retainer & Pricing', content: { rows: [{ id: 'r1', item: 'Monthly Growth Campaign Management', description: 'Channel optimization & bi-weekly reporting', quantity: 3, unitPrice: 1500, total: 4500 }], subtotal: 4500, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 4500, currency: 'USD' }, order: 2 },
-    ],
-  },
-  {
-    id: 'consulting',
-    title: 'Strategic Business Consulting',
-    description: 'Business assessment, operational roadmap, and strategic recommendations.',
-    tag: 'Strategy',
-    sections: [
-      { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Strategic Advisory Engagement', subtitle: 'Business Optimization Roadmap' }, order: 0 },
-      { id: '2', type: 'introduction', title: 'Engagement Scope', content: '<p>In-depth diagnostic analysis and strategic execution roadmap tailored for scalable growth.</p>', order: 1 },
-      { id: '3', type: 'pricing', title: 'Advisory Fee', content: { rows: [{ id: 'r1', item: 'Strategy & Diagnostic Sprint', description: '4-week advisory engagement', quantity: 1, unitPrice: 5000, total: 5000 }], subtotal: 5000, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 5000, currency: 'USD' }, order: 2 },
-    ],
-  },
-];
+const HIGHLIGHT_TEMPLATES = ALL_TEMPLATES.slice(0, 8);
 
 export default function CreateProposalPage() {
   const { user, settings } = useAuth();
@@ -106,18 +58,19 @@ export default function CreateProposalPage() {
 
     try {
       let initialSections: any[] = [];
+      let templateStyles = undefined;
 
       if (mode === 'template') {
-        const tmpl = BUILTIN_TEMPLATES.find((t) => t.id === selectedTemplate);
+        const tmpl = ALL_TEMPLATES.find((t) => t.id === selectedTemplate);
         if (tmpl) {
           initialSections = tmpl.sections.map((s) => ({
             ...s,
             id: generateId(),
             content: s.type === 'pricing' && s.content && typeof s.content === 'object' ? { ...(s.content as Record<string, unknown>), currency } : s.content,
           }));
+          templateStyles = tmpl.styles;
         }
       } else if (mode === 'ai') {
-        // Try calling AI route
         try {
           const aiRes = await fetch('/api/ai/generate-proposal', {
             method: 'POST',
@@ -141,7 +94,6 @@ export default function CreateProposalPage() {
           console.warn('AI generator fallback:', aiErr);
         }
 
-        // Fallback default sections if needed
         if (initialSections.length === 0) {
           initialSections = [
             {
@@ -175,7 +127,6 @@ export default function CreateProposalPage() {
           ];
         }
       } else {
-        // Blank mode
         initialSections = [
           {
             id: generateId(),
@@ -203,6 +154,7 @@ export default function CreateProposalPage() {
         currency,
         sections: initialSections,
         pricing: null,
+        styles: templateStyles,
         shareId: null,
         sharedAt: null,
         expiresAt: null,
@@ -294,11 +246,11 @@ export default function CreateProposalPage() {
             </div>
             <h3 className="font-bold text-base">Curated Templates</h3>
             <p className={`text-xs mt-1 leading-relaxed ${mode === 'template' ? 'text-neutral-300' : 'text-[#71717a]'}`}>
-              Start with pre-formatted sections designed for your specific industry.
+              {ALL_TEMPLATES.length} industry-specific templates with unique designs.
             </p>
           </div>
           <div className="mt-4 flex items-center justify-between text-xs font-semibold">
-            <span className={mode === 'template' ? 'text-[#d4ff00]' : 'text-[#09090b]'}>8+ Pro layouts</span>
+            <span className={mode === 'template' ? 'text-[#d4ff00]' : 'text-[#09090b]'}>{ALL_TEMPLATES.length}+ Pro layouts</span>
             {mode === 'template' && <CheckCircle2 className="h-4 w-4 text-[#d4ff00]" />}
           </div>
         </div>
@@ -409,9 +361,14 @@ export default function CreateProposalPage() {
       {mode === 'template' && (
         <Card>
           <CardContent className="p-6 space-y-4">
-            <h2 className="text-base font-bold text-[#09090b]">Select Starting Template</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-[#09090b]">Select Starting Template</h2>
+              <Button variant="ghost" size="sm" className="text-xs font-semibold" onClick={() => router.push('/templates/explore')}>
+                View All {ALL_TEMPLATES.length} Templates <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {BUILTIN_TEMPLATES.map((tmpl) => (
+              {HIGHLIGHT_TEMPLATES.map((tmpl) => (
                 <div
                   key={tmpl.id}
                   onClick={() => setSelectedTemplate(tmpl.id)}
@@ -422,13 +379,24 @@ export default function CreateProposalPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-[#09090b] text-[#d4ff00] px-2.5 py-0.5 rounded-full">
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: `${tmpl.styles.colors.accent}20`,
+                        color: tmpl.styles.colors.accent,
+                      }}
+                    >
                       {tmpl.tag}
                     </span>
                     {selectedTemplate === tmpl.id && <CheckCircle2 className="h-4 w-4 text-[#09090b]" />}
                   </div>
                   <h4 className="font-bold text-sm text-[#09090b] mt-2">{tmpl.title}</h4>
-                  <p className="text-xs text-[#71717a] mt-1 leading-relaxed">{tmpl.description}</p>
+                  <p className="text-xs text-[#71717a] mt-1 leading-relaxed line-clamp-2">{tmpl.description}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <div className="w-3.5 h-3.5 rounded-full border border-[#e4e4e7]" style={{ backgroundColor: tmpl.styles.colors.primary }} />
+                    <div className="w-3.5 h-3.5 rounded-full border border-[#e4e4e7]" style={{ backgroundColor: tmpl.styles.colors.accent }} />
+                    <span className="text-[10px] text-[#a1a1aa] ml-1">{tmpl.sections.length} sections</span>
+                  </div>
                 </div>
               ))}
             </div>

@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Proposal, ProposalAcceptor, PricingTableData, TimelineMilestone } from '@/types';
+import { Proposal, ProposalAcceptor, PricingTableData, TimelineMilestone, TemplateStyles } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { GOOGLE_FONTS } from '@/lib/templates';
 import {
   Sparkles,
   CheckCircle2,
@@ -47,6 +48,30 @@ export default function SharedProposalPage() {
     contentRef: printRef,
     documentTitle: proposal?.title || 'Proposal',
   });
+
+  const styles: TemplateStyles = proposal?.styles || {
+    fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+    colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
+    logoPosition: 'left',
+    header: '',
+    footer: '',
+  };
+
+  // Load Google Fonts for selected fonts
+  useEffect(() => {
+    const fonts = new Set([styles.fonts.heading, styles.fonts.body]);
+    fonts.forEach((fontName) => {
+      const existing = document.querySelector(`link[data-font="${fontName}"]`);
+      if (existing) return;
+      const font = GOOGLE_FONTS.find((f) => f.name === fontName);
+      if (!font) return;
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${font.import}&display=swap`;
+      link.setAttribute('data-font', fontName);
+      document.head.appendChild(link);
+    });
+  }, [styles.fonts.heading, styles.fonts.body]);
 
   useEffect(() => {
     if (!shareId) return;
@@ -157,9 +182,9 @@ export default function SharedProposalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: styles.colors.background }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 rounded-full border-3 border-[#09090b] border-t-[#d4ff00] animate-spin" />
+          <div className="h-10 w-10 rounded-full border-3 border-t-[#d4ff00] animate-spin" style={{ borderColor: styles.colors.primary, borderTopColor: styles.colors.accent }} />
           <span className="text-xs font-semibold uppercase tracking-widest text-[#71717a]">Loading Proposal...</span>
         </div>
       </div>
@@ -168,7 +193,7 @@ export default function SharedProposalPage() {
 
   if (error || !proposal) {
     return (
-      <div className="min-h-screen bg-[#fcfcfd] flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: styles.colors.background }}>
         <div className="max-w-md w-full text-center p-8 bg-white rounded-3xl border border-[#e4e4e7] shadow-lg">
           <div className="h-12 w-12 rounded-2xl bg-[#f4f4f5] text-[#09090b] flex items-center justify-center mx-auto mb-4">
             <Sparkles className="h-6 w-6" />
@@ -190,13 +215,13 @@ export default function SharedProposalPage() {
   const sortedSections = [...(proposal.sections || [])].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] text-[#09090b] selection:bg-[#d4ff00] selection:text-black">
+    <div className="min-h-screen text-[#09090b] selection:bg-[#d4ff00] selection:text-black" style={{ backgroundColor: styles.colors.background }}>
       {/* Sticky Client Response Header */}
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#e4e4e7] print:hidden">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl bg-[#09090b] text-[#d4ff00] flex items-center justify-center shadow-xs">
-              <Sparkles className="h-4 w-4 fill-[#d4ff00]" />
+            <div className="h-8 w-8 rounded-xl flex items-center justify-center shadow-xs" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
+              <Sparkles className="h-4 w-4" />
             </div>
             <div>
               <span className="font-extrabold text-sm text-[#09090b] tracking-tight">Proposal Preview</span>
@@ -258,23 +283,31 @@ export default function SharedProposalPage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         <div ref={printRef} data-print-root className="space-y-8">
 
+        {/* Header (if set) */}
+        {styles.header && (
+          <div className="text-center text-[10px] font-bold uppercase tracking-widest py-2 border-b border-[#e4e4e7]" style={{ color: styles.colors.accent, fontFamily: styles.fonts.heading }}>
+            {styles.header}
+          </div>
+        )}
+
         {/* Render Sections */}
         {sortedSections.map((section, idx) => {
           if (section.type === 'cover') {
             return (
               <div
                 key={section.id}
-                className="bg-[#09090b] text-white rounded-3xl p-8 sm:p-14 relative overflow-hidden shadow-xl"
+                className="text-white rounded-3xl p-8 sm:p-14 relative overflow-hidden shadow-xl"
+                style={{ backgroundColor: styles.colors.primary }}
               >
-                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full bg-[#d4ff00]/15 blur-3xl pointer-events-none" />
+                <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-15" style={{ backgroundColor: styles.colors.accent }} />
                 <div className="relative z-10 max-w-2xl space-y-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-[#d4ff00] border border-white/10">
-                    <Sparkles className="h-3 w-3 fill-[#d4ff00]" /> Client Proposal
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border border-white/10" style={{ backgroundColor: `${styles.colors.accent}20`, color: styles.colors.accent }}>
+                    <Sparkles className="h-3 w-3" /> Client Proposal
                   </div>
                   <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
                     {section.content?.title || proposal.title}
                   </h1>
-                  <p className="text-base sm:text-lg text-[#d4ff00] font-semibold">
+                  <p className="text-base sm:text-lg font-semibold" style={{ color: styles.colors.accent }}>
                     {section.content?.subtitle || proposal.purpose}
                   </p>
                   <div className="pt-4 flex flex-wrap items-center gap-6 text-xs text-neutral-400 border-t border-white/10">
@@ -293,7 +326,7 @@ export default function SharedProposalPage() {
             return (
               <div key={section.id} className="bg-white rounded-3xl border border-[#e4e4e7] p-6 sm:p-8 shadow-xs space-y-5">
                 <div className="flex items-center gap-2 pb-3 border-b border-[#f4f4f5]">
-                  <div className="h-7 w-7 rounded-lg bg-[#09090b] text-[#d4ff00] flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-lg text-white flex items-center justify-center" style={{ backgroundColor: styles.colors.primary }}>
                     <DollarSign className="h-4 w-4" />
                   </div>
                   <h2 className="text-xl font-bold text-[#09090b]">{section.title || 'Investment & Pricing'}</h2>
@@ -344,7 +377,7 @@ export default function SharedProposalPage() {
                     )}
                     <div className="pt-3 border-t border-[#e4e4e7] flex justify-between items-baseline">
                       <span className="font-extrabold text-sm text-[#09090b]">Total Investment</span>
-                      <span className="font-extrabold text-lg text-[#09090b] bg-[#d4ff00]/40 px-3 py-0.5 rounded-xl">
+                      <span className="font-extrabold text-lg px-3 py-0.5 rounded-xl" style={{ color: styles.colors.primary, backgroundColor: `${styles.colors.accent}40` }}>
                         {formatCurrency(pricing.total, pricing.currency)}
                       </span>
                     </div>
@@ -359,7 +392,7 @@ export default function SharedProposalPage() {
             return (
               <div key={section.id} className="bg-white rounded-3xl border border-[#e4e4e7] p-6 sm:p-8 shadow-xs space-y-5">
                 <div className="flex items-center gap-2 pb-3 border-b border-[#f4f4f5]">
-                  <div className="h-7 w-7 rounded-lg bg-[#09090b] text-[#d4ff00] flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-lg text-white flex items-center justify-center" style={{ backgroundColor: styles.colors.primary }}>
                     <Calendar className="h-4 w-4" />
                   </div>
                   <h2 className="text-xl font-bold text-[#09090b]">{section.title || 'Project Timeline'}</h2>
@@ -368,7 +401,7 @@ export default function SharedProposalPage() {
                 <div className="relative pl-6 space-y-5 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#e4e4e7]">
                   {milestones.map((m, mIdx) => (
                     <div key={m.id || mIdx} className="relative">
-                      <div className="absolute -left-6 top-0.5 h-5 w-5 rounded-full bg-[#09090b] text-[#d4ff00] flex items-center justify-center text-[10px] font-bold">
+                      <div className="absolute -left-6 top-0.5 h-5 w-5 rounded-full text-white flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
                         {mIdx + 1}
                       </div>
                       <div className="bg-[#fcfcfd] p-4 rounded-2xl border border-[#e4e4e7] space-y-1">
@@ -409,10 +442,17 @@ export default function SharedProposalPage() {
           );
         })}
 
+        {/* Footer (if set) */}
+        {styles.footer && (
+          <div className="text-center text-[10px] font-bold uppercase tracking-widest py-3 border-t border-[#e4e4e7] mt-8" style={{ color: styles.colors.accent, fontFamily: styles.fonts.heading }}>
+            {styles.footer}
+          </div>
+        )}
+
         {/* Bottom Accept Action Box */}
         {status !== 'rejected' && (
-          <div className="p-8 bg-[#09090b] text-white rounded-3xl text-center space-y-4 shadow-xl print:hidden" data-html2canvas-ignore="true">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#d4ff00]">
+          <div className="p-8 text-white rounded-3xl text-center space-y-4 shadow-xl print:hidden" data-html2canvas-ignore="true" style={{ backgroundColor: styles.colors.primary }}>
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: styles.colors.accent }}>
               Interested in this proposal?
             </span>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-white">
