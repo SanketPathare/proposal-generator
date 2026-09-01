@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -54,16 +55,23 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] text-[#09090b]">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      <Header sidebarCollapsed={sidebarCollapsed} />
+      <div className="print:hidden">
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <Header sidebarCollapsed={sidebarCollapsed} />
+      </div>
       <main
         className={cn(
-          'pt-18 min-h-screen transition-all duration-300 bg-[#fcfcfd]',
+          'pt-18 min-h-screen transition-all duration-300 bg-[#fcfcfd] print:pt-0 print:pl-0',
           sidebarCollapsed ? 'lg:pl-18' : 'lg:pl-64'
         )}
         role="main"
       >
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className={cn(
+          "mx-auto p-4 sm:p-6 lg:p-8 print:p-0 print:max-w-none",
+          (pathname.startsWith('/proposals/') && pathname !== '/proposals/new' && pathname !== '/proposals')
+            ? "max-w-full"
+            : "max-w-7xl"
+        )}>
           {children}
         </div>
       </main>

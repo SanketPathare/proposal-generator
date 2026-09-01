@@ -51,6 +51,12 @@ const DEFAULT_TEMPLATE_STYLES = {
   logoPosition: 'left' as const,
   header: '',
   footer: '',
+  coverLayout: 'standard' as const,
+  sectionStyle: 'cards' as const,
+  borderStyle: 'rounded' as const,
+  accentStyle: 'glow' as const,
+  pricingStyle: 'standard' as const,
+  timelineStyle: 'vertical' as const,
 };
 
 function createEmptySection(order: number): ProposalSection {

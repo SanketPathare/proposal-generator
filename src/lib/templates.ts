@@ -37,8 +37,6 @@ export const GOOGLE_FONTS = [
   { name: 'Work Sans', import: 'Work+Sans:wght@400;500;600;700' },
   { name: 'Rubik', import: 'Rubik:wght@400;500;600;700' },
   { name: 'Commissioner', import: 'Commissioner:wght@400;500;600;700' },
-  { name: 'Plus Jakarta Sans', import: 'Plus+Jakarta+Sans:wght@400;500;600;700;800' },
-  { name: 'Space Grotesk', import: 'Space+Grotesk:wght@400;500;600;700' },
 ];
 
 export function getFontImportUrl(fontName: string): string {
@@ -48,7 +46,7 @@ export function getFontImportUrl(fontName: string): string {
 
 export const ALL_TEMPLATES: TemplateDefinition[] = [
   // ============================================
-  // 1. WEB DEVELOPMENT (existing, restyled)
+  // 1. WEB DEVELOPMENT — Standard + Glow + Cards
   // ============================================
   {
     id: 'web-dev',
@@ -60,22 +58,28 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
       colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'proposal.example.com',
+      footer: 'Confidential — All Rights Reserved',
+      coverLayout: 'standard',
+      sectionStyle: 'cards',
+      borderStyle: 'rounded',
+      accentStyle: 'glow',
+      pricingStyle: 'standard',
+      timelineStyle: 'vertical',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Web Development Proposal', subtitle: 'Modern High-Performance Web Solution' }, order: 0 },
       { id: '2', type: 'introduction', title: 'Executive Summary', content: '<p>Thank you for the opportunity to partner on this web project. Our objective is to deliver a world-class, responsive, and SEO-optimized web application.</p><p>We combine cutting-edge technology with thoughtful design to create digital experiences that drive results.</p>', order: 1 },
       { id: '3', type: 'scope', title: 'Scope of Work', content: '<p>Key development modules include:</p><ul><li>UX/UI Architecture & Design System</li><li>Next.js Frontend & API Integration</li><li>Performance Optimization & Analytics</li><li>Comprehensive QA & Cloud Deployment</li></ul>', order: 2 },
       { id: '4', type: 'features', title: 'Technical Features', content: '<ul><li>Server-side rendering for optimal SEO</li><li>Responsive design across all devices</li><li>Progressive Web App capabilities</li><li>Automated testing and CI/CD pipeline</li></ul>', order: 3 },
-      { id: '5', type: 'timeline', title: 'Project Timeline', content: [{ id: 't1', title: 'Discovery & Planning', description: 'Requirements gathering and technical architecture', date: '2026-01-15', completed: false }, { id: 't2', title: 'Design & prototyping', description: 'UI/UX design and interactive prototype', date: '2026-02-01', completed: false }, { id: 't3', title: 'Development Sprint', description: 'Core feature implementation', date: '2026-03-01', completed: false }, { id: 't4', title: 'Testing & Launch', description: 'QA, performance optimization, and deployment', date: '2026-03-20', completed: false }], order: 4 },
+      { id: '5', type: 'timeline', title: 'Project Timeline', content: [{ id: 't1', title: 'Discovery & Planning', description: 'Requirements gathering and technical architecture', date: '2026-01-15', completed: false }, { id: 't2', title: 'Design & Prototyping', description: 'UI/UX design and interactive prototype', date: '2026-02-01', completed: false }, { id: 't3', title: 'Development Sprint', description: 'Core feature implementation', date: '2026-03-01', completed: false }, { id: 't4', title: 'Testing & Launch', description: 'QA, performance optimization, and deployment', date: '2026-03-20', completed: false }], order: 4 },
       { id: '6', type: 'pricing', title: 'Investment & Pricing', content: { rows: [{ id: 'r1', item: 'Frontend & Backend Build', description: 'Next.js App with responsive views', quantity: 1, unitPrice: 4500, total: 4500 }, { id: 'r2', item: 'SEO & Analytics Setup', description: 'Technical SEO and tracking', quantity: 1, unitPrice: 800, total: 800 }], subtotal: 5300, discount: 0, discountType: 'fixed', tax: 0, taxType: 'fixed', total: 5300, currency: 'USD' }, order: 5 },
       { id: '7', type: 'terms', title: 'Terms & Next Steps', content: '<p>50% initial deposit required prior to project kick-off. Final 50% payable upon deployment.</p><p>All intellectual property transfers to the client upon full payment.</p>', order: 6 },
     ],
   },
 
   // ============================================
-  // 2. UI/UX DESIGN (existing, restyled)
+  // 2. UI/UX DESIGN — Split + Gradient + Minimal
   // ============================================
   {
     id: 'uiux',
@@ -86,9 +90,15 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
     styles: {
       fonts: { heading: 'Outfit', body: 'DM Sans' },
       colors: { primary: '#6366f1', secondary: '#eef2ff', accent: '#818cf8', background: '#ffffff', text: '#1e1b4b' },
-      logoPosition: 'left',
+      logoPosition: 'center',
       header: '',
-      footer: '',
+      footer: 'Designed with care by Studio UX',
+      coverLayout: 'split',
+      sectionStyle: 'minimal',
+      borderStyle: 'sharp',
+      accentStyle: 'gradient',
+      pricingStyle: 'compact',
+      timelineStyle: 'horizontal',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'UI/UX Design Proposal', subtitle: 'User-Centered Product Design' }, order: 0 },
@@ -102,7 +112,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 3. MARKETING (existing, restyled)
+  // 3. MARKETING — Centered + Stripe + Filled
   // ============================================
   {
     id: 'marketing',
@@ -114,8 +124,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Sora', body: 'Plus Jakarta Sans' },
       colors: { primary: '#c2410c', secondary: '#fff7ed', accent: '#f97316', background: '#ffffff', text: '#431407' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'GROWTH PARTNERS',
+      footer: 'Driving results since 2020',
+      coverLayout: 'centered',
+      sectionStyle: 'filled',
+      borderStyle: 'pill',
+      accentStyle: 'stripe',
+      pricingStyle: 'highlight',
+      timelineStyle: 'steps',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Growth Marketing Proposal', subtitle: 'Data-Driven Customer Acquisition' }, order: 0 },
@@ -127,7 +143,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 4. CONSULTING (existing, restyled)
+  // 4. CONSULTING — Sidebar + Lines + Bordered
   // ============================================
   {
     id: 'consulting',
@@ -138,9 +154,15 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
     styles: {
       fonts: { heading: 'Merriweather', body: 'Lato' },
       colors: { primary: '#1e293b', secondary: '#f8fafc', accent: '#d97706', background: '#ffffff', text: '#0f172a' },
-      logoPosition: 'left',
-      header: '',
-      footer: '',
+      logoPosition: 'right',
+      header: 'STRATEGIC ADVISORY',
+      footer: 'Partner — Build — Scale',
+      coverLayout: 'sidebar',
+      sectionStyle: 'bordered',
+      borderStyle: 'sharp',
+      accentStyle: 'lines',
+      pricingStyle: 'bordered',
+      timelineStyle: 'vertical',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Strategic Advisory Engagement', subtitle: 'Business Optimization Roadmap' }, order: 0 },
@@ -152,7 +174,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 5. PHOTOGRAPHY & VIDEO
+  // 5. PHOTOGRAPHY — Full-Bleed + None + Minimal
   // ============================================
   {
     id: 'photography',
@@ -164,8 +186,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Playfair Display', body: 'Source Sans 3' },
       colors: { primary: '#1a1a2e', secondary: '#f5f0eb', accent: '#e94560', background: '#fdfcfa', text: '#1a1a2e' },
       logoPosition: 'center',
-      header: '',
-      footer: '',
+      header: 'VISUAL STUDIO',
+      footer: 'Capturing moments that matter',
+      coverLayout: 'full-bleed',
+      sectionStyle: 'minimal',
+      borderStyle: 'rounded',
+      accentStyle: 'none',
+      pricingStyle: 'standard',
+      timelineStyle: 'cards',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Photography & Video Production', subtitle: 'Visual Storytelling for Your Brand' }, order: 0 },
@@ -180,7 +208,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 6. WRITING & CONTENT
+  // 6. WRITING — Centered + Dots + Cards
   // ============================================
   {
     id: 'writing',
@@ -193,7 +221,13 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       colors: { primary: '#2d1b69', secondary: '#f5f3ff', accent: '#a78bfa', background: '#fefcfb', text: '#1e1b4b' },
       logoPosition: 'left',
       header: '',
-      footer: '',
+      footer: 'Words that work — Inkwell Studio',
+      coverLayout: 'centered',
+      sectionStyle: 'cards',
+      borderStyle: 'rounded',
+      accentStyle: 'dots',
+      pricingStyle: 'compact',
+      timelineStyle: 'vertical',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Writing & Content Strategy', subtitle: 'Words That Convert and Inspire' }, order: 0 },
@@ -208,7 +242,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 7. EVENTS & ENTERTAINMENT
+  // 7. EVENTS — Diagonal + Stripe + Filled
   // ============================================
   {
     id: 'events',
@@ -220,8 +254,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Outfit', body: 'DM Sans' },
       colors: { primary: '#be123c', secondary: '#fff1f2', accent: '#fb923c', background: '#fffaf8', text: '#1c1917' },
       logoPosition: 'center',
-      header: '',
-      footer: '',
+      header: 'SPECTACLE EVENTS',
+      footer: 'Creating unforgettable moments',
+      coverLayout: 'diagonal',
+      sectionStyle: 'filled',
+      borderStyle: 'pill',
+      accentStyle: 'stripe',
+      pricingStyle: 'highlight',
+      timelineStyle: 'steps',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Event Production Proposal', subtitle: 'Creating Unforgettable Experiences' }, order: 0 },
@@ -235,7 +275,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 8. REAL ESTATE & ARCHITECTURE
+  // 8. REAL ESTATE — Sidebar + Lines + Bordered
   // ============================================
   {
     id: 'real-estate',
@@ -247,8 +287,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Cormorant Garamond', body: 'Raleway' },
       colors: { primary: '#1e3a5f', secondary: '#f0f4f8', accent: '#c9a96e', background: '#faf8f5', text: '#1a1a1a' },
       logoPosition: 'right',
-      header: '',
-      footer: '',
+      header: 'ATELIER STUDIO',
+      footer: 'Crafting spaces since 2015',
+      coverLayout: 'sidebar',
+      sectionStyle: 'bordered',
+      borderStyle: 'sharp',
+      accentStyle: 'lines',
+      pricingStyle: 'bordered',
+      timelineStyle: 'cards',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Architectural Design Proposal', subtitle: 'Crafting Spaces That Inspire' }, order: 0 },
@@ -262,7 +308,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 9. AI / SAAS / TECH
+  // 9. AI/SAAS — Split + Gradient + Minimal
   // ============================================
   {
     id: 'ai-saas',
@@ -274,8 +320,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Space Grotesk', body: 'Inter' },
       colors: { primary: '#0f172a', secondary: '#f0f9ff', accent: '#06b6d4', background: '#fcfeff', text: '#0f172a' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'TECHFORGE AI',
+      footer: 'Building intelligent systems',
+      coverLayout: 'split',
+      sectionStyle: 'minimal',
+      borderStyle: 'sharp',
+      accentStyle: 'gradient',
+      pricingStyle: 'compact',
+      timelineStyle: 'horizontal',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'AI/SaaS Platform Proposal', subtitle: 'Intelligent Solutions for Modern Business' }, order: 0 },
@@ -289,7 +341,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 10. HEALTH & FITNESS
+  // 10. HEALTH & FITNESS — Standard + Dots + Cards
   // ============================================
   {
     id: 'health-fitness',
@@ -302,7 +354,13 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       colors: { primary: '#065f46', secondary: '#ecfdf5', accent: '#10b981', background: '#f7fdf9', text: '#064e3b' },
       logoPosition: 'left',
       header: '',
-      footer: '',
+      footer: 'Your journey starts here — FitLife Pro',
+      coverLayout: 'standard',
+      sectionStyle: 'cards',
+      borderStyle: 'pill',
+      accentStyle: 'dots',
+      pricingStyle: 'standard',
+      timelineStyle: 'vertical',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Health & Fitness Program', subtitle: 'Transform Your Body, Transform Your Life' }, order: 0 },
@@ -317,7 +375,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 11. LEGAL & FINANCE
+  // 11. LEGAL & FINANCE — Centered + Lines + Bordered
   // ============================================
   {
     id: 'legal-finance',
@@ -329,8 +387,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Merriweather', body: 'Lato' },
       colors: { primary: '#1e293b', secondary: '#f8fafc', accent: '#d97706', background: '#fffdf7', text: '#1e293b' },
       logoPosition: 'right',
-      header: '',
-      footer: '',
+      header: 'STERLING & ASSOCIATES',
+      footer: 'Trusted counsel since 2005',
+      coverLayout: 'centered',
+      sectionStyle: 'bordered',
+      borderStyle: 'sharp',
+      accentStyle: 'lines',
+      pricingStyle: 'bordered',
+      timelineStyle: 'steps',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Legal & Financial Advisory', subtitle: 'Strategic Counsel for Complex Matters' }, order: 0 },
@@ -343,7 +407,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 12. EDUCATION & TRAINING
+  // 12. EDUCATION — Diagonal + Stripe + Filled
   // ============================================
   {
     id: 'education',
@@ -355,8 +419,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Poppins', body: 'Nunito Sans' },
       colors: { primary: '#7c3aed', secondary: '#f5f3ff', accent: '#f59e0b', background: '#fffdf5', text: '#1e1b4b' },
       logoPosition: 'center',
-      header: '',
-      footer: '',
+      header: 'SKILLFORGE ACADEMY',
+      footer: 'Empowering teams through knowledge',
+      coverLayout: 'diagonal',
+      sectionStyle: 'filled',
+      borderStyle: 'rounded',
+      accentStyle: 'stripe',
+      pricingStyle: 'highlight',
+      timelineStyle: 'cards',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Training Program Proposal', subtitle: 'Empowering Teams Through Knowledge' }, order: 0 },
@@ -371,7 +441,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 13. PODCAST & AUDIO
+  // 13. PODCAST — Full-Bleed + Glow + Minimal
   // ============================================
   {
     id: 'podcast',
@@ -383,8 +453,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Manrope', body: 'Work Sans' },
       colors: { primary: '#18181b', secondary: '#f5f3ff', accent: '#8b5cf6', background: '#fefcff', text: '#18181b' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'RESONANCE AUDIO',
+      footer: 'Your voice, amplified',
+      coverLayout: 'full-bleed',
+      sectionStyle: 'minimal',
+      borderStyle: 'rounded',
+      accentStyle: 'glow',
+      pricingStyle: 'standard',
+      timelineStyle: 'vertical',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Podcast Production Proposal', subtitle: 'Your Voice, Amplified' }, order: 0 },
@@ -397,7 +473,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 14. FOOD & HOSPITALITY
+  // 14. FOOD & HOSPITALITY — Split + Dots + Cards
   // ============================================
   {
     id: 'food-hospitality',
@@ -409,8 +485,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Fraunces', body: 'Commissioner' },
       colors: { primary: '#78350f', secondary: '#fef3c7', accent: '#dc2626', background: '#fffdf5', text: '#451a03' },
       logoPosition: 'center',
-      header: '',
-      footer: '',
+      header: 'SAVORY TABLE CO.',
+      footer: 'Exceptional dining, every time',
+      coverLayout: 'split',
+      sectionStyle: 'cards',
+      borderStyle: 'pill',
+      accentStyle: 'dots',
+      pricingStyle: 'highlight',
+      timelineStyle: 'steps',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Catering & Hospitality Proposal', subtitle: 'Exceptional Dining Experiences' }, order: 0 },
@@ -423,7 +505,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 15. CRYPTO & WEB3
+  // 15. CRYPTO & WEB3 — Standard + Gradient + Striped
   // ============================================
   {
     id: 'crypto-web3',
@@ -435,8 +517,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Chakra Petch', body: 'Space Grotesk' },
       colors: { primary: '#09090b', secondary: '#faf5ff', accent: '#a855f7', background: '#fefcff', text: '#09090b' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'NEXUS CHAIN',
+      footer: 'Decentralized by design',
+      coverLayout: 'standard',
+      sectionStyle: 'striped',
+      borderStyle: 'sharp',
+      accentStyle: 'gradient',
+      pricingStyle: 'compact',
+      timelineStyle: 'horizontal',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Web3 Project Proposal', subtitle: 'Building the Decentralized Future' }, order: 0 },
@@ -450,7 +538,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 16. ECOMMERCE & RETAIL
+  // 16. ECOMMERCE — Centered + Stripe + Filled
   // ============================================
   {
     id: 'ecommerce',
@@ -462,8 +550,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Sora', body: 'Plus Jakarta Sans' },
       colors: { primary: '#991b1b', secondary: '#fef2f2', accent: '#f97316', background: '#fffdf8', text: '#1c1917' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'COMMERCE STUDIO',
+      footer: 'Sell more, scale faster',
+      coverLayout: 'centered',
+      sectionStyle: 'filled',
+      borderStyle: 'rounded',
+      accentStyle: 'stripe',
+      pricingStyle: 'highlight',
+      timelineStyle: 'cards',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'E-commerce Solution Proposal', subtitle: 'Sell More, Scale Faster' }, order: 0 },
@@ -476,7 +570,7 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
   },
 
   // ============================================
-  // 17. NONPROFIT & SOCIAL IMPACT
+  // 17. NONPROFIT — Sidebar + Lines + Bordered
   // ============================================
   {
     id: 'nonprofit',
@@ -488,8 +582,14 @@ export const ALL_TEMPLATES: TemplateDefinition[] = [
       fonts: { heading: 'Atkinson Hyperlegible', body: 'Source Sans 3' },
       colors: { primary: '#1e40af', secondary: '#eff6ff', accent: '#f472b6', background: '#fefcff', text: '#1e3a5f' },
       logoPosition: 'left',
-      header: '',
-      footer: '',
+      header: 'HOPE FORWARD',
+      footer: 'Creating lasting change together',
+      coverLayout: 'sidebar',
+      sectionStyle: 'bordered',
+      borderStyle: 'pill',
+      accentStyle: 'lines',
+      pricingStyle: 'standard',
+      timelineStyle: 'vertical',
     },
     sections: [
       { id: '1', type: 'cover', title: 'Cover Page', content: { title: 'Social Impact Program', subtitle: 'Creating Lasting Change Together' }, order: 0 },

@@ -51,12 +51,18 @@ export function SaveAsTemplate({ proposal, open, onClose, onSave }: SaveAsTempla
         thumbnailUrl: '',
         thumbnailPublicId: '',
         sections: proposal.sections,
-        styles: {
+        styles: proposal.styles || {
           fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
           colors: { primary: '#09090b', secondary: '#f4f4f5', accent: '#d4ff00', background: '#ffffff', text: '#09090b' },
           logoPosition: 'left',
           header: '',
           footer: '',
+          coverLayout: 'standard',
+          sectionStyle: 'cards',
+          borderStyle: 'rounded',
+          accentStyle: 'glow',
+          pricingStyle: 'standard',
+          timelineStyle: 'vertical',
         },
         isPublic: false,
       });

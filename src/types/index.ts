@@ -180,6 +180,12 @@ export interface TemplateStyles {
   logoPosition: 'left' | 'center' | 'right';
   header: string;
   footer: string;
+  coverLayout: 'standard' | 'split' | 'centered' | 'full-bleed' | 'sidebar' | 'diagonal';
+  sectionStyle: 'cards' | 'minimal' | 'bordered' | 'filled' | 'striped';
+  borderStyle: 'rounded' | 'sharp' | 'pill';
+  accentStyle: 'glow' | 'gradient' | 'stripe' | 'dots' | 'lines' | 'none';
+  pricingStyle: 'standard' | 'compact' | 'highlight' | 'bordered';
+  timelineStyle: 'vertical' | 'horizontal' | 'steps' | 'cards';
 }
 
 export type ContentCategory = 'about_me' | 'services' | 'payment_terms' | 'terms_conditions' | 'testimonials' | 'portfolio';

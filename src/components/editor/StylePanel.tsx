@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { TemplateStyles } from '@/types';
 import { GOOGLE_FONTS } from '@/lib/templates';
-import { X, Palette, Type, Image, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { X, Palette, Type, Image, AlignLeft, AlignCenter, AlignRight, Layout, Square, Paintbrush, CreditCard, Timer } from 'lucide-react';
 
 interface StylePanelProps {
   styles: TemplateStyles;
@@ -162,6 +162,102 @@ export function StylePanel({ styles, onChange }: StylePanelProps) {
                   </button>
                 );
               })}
+            </div>
+          </section>
+
+          {/* Cover Layout */}
+          <section>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#71717a] mb-3 flex items-center gap-1.5">
+              <Layout className="h-3.5 w-3.5" /> Cover Layout
+            </h4>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(['standard', 'split', 'centered', 'full-bleed', 'sidebar', 'diagonal'] as const).map((layout) => {
+                const isActive = styles.coverLayout === layout;
+                return (
+                  <button key={layout} onClick={() => onChange({ ...styles, coverLayout: layout })}
+                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${isActive ? 'border-[#09090b] bg-[#09090b] text-white' : 'border-[#e4e4e7] bg-white text-[#71717a] hover:border-[#d4d4d8]'}`}>
+                    {layout}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Section Style */}
+          <section>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#71717a] mb-3 flex items-center gap-1.5">
+              <Square className="h-3.5 w-3.5" /> Section Style
+            </h4>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(['cards', 'minimal', 'bordered', 'filled', 'striped'] as const).map((s) => {
+                const isActive = styles.sectionStyle === s;
+                return (
+                  <button key={s} onClick={() => onChange({ ...styles, sectionStyle: s })}
+                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${isActive ? 'border-[#09090b] bg-[#09090b] text-white' : 'border-[#e4e4e7] bg-white text-[#71717a] hover:border-[#d4d4d8]'}`}>
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Accent Style */}
+          <section>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#71717a] mb-3 flex items-center gap-1.5">
+              <Paintbrush className="h-3.5 w-3.5" /> Accent Style
+            </h4>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(['glow', 'gradient', 'stripe', 'dots', 'lines', 'none'] as const).map((a) => {
+                const isActive = styles.accentStyle === a;
+                return (
+                  <button key={a} onClick={() => onChange({ ...styles, accentStyle: a })}
+                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${isActive ? 'border-[#09090b] bg-[#09090b] text-white' : 'border-[#e4e4e7] bg-white text-[#71717a] hover:border-[#d4d4d8]'}`}>
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Border + Pricing + Timeline */}
+          <section>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#71717a] mb-3 flex items-center gap-1.5">
+              <CreditCard className="h-3.5 w-3.5" /> Details
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-[#71717a] w-16 shrink-0">Borders</label>
+                <div className="flex gap-1 flex-1">
+                  {(['rounded', 'sharp', 'pill'] as const).map((b) => (
+                    <button key={b} onClick={() => onChange({ ...styles, borderStyle: b })}
+                      className={`flex-1 px-2 py-1 rounded text-[10px] font-bold border transition-all cursor-pointer ${styles.borderStyle === b ? 'border-[#09090b] bg-[#09090b] text-white' : 'border-[#e4e4e7] bg-white text-[#71717a]'}`}>
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-[#71717a] w-16 shrink-0">Pricing</label>
+                <div className="flex gap-1 flex-1">
+                  {(['standard', 'compact', 'highlight', 'bordered'] as const).map((p) => (
+                    <button key={p} onClick={() => onChange({ ...styles, pricingStyle: p })}
+                      className={`flex-1 px-1.5 py-1 rounded text-[10px] font-bold border transition-all cursor-pointer ${styles.pricingStyle === p ? 'border-[#09090b] bg-[#09090b] text-white' : 'border-[#e4e4e7] bg-white text-[#71717a]'}`}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-[#71717a] w-16 shrink-0">Timeline</label>
+                <div className="flex gap-1 flex-1">
+                  {(['vertical', 'horizontal', 'steps', 'cards'] as const).map((t) => (
+                    <button key={t} onClick={() => onChange({ ...styles, timelineStyle: t })}
+                      className={`flex-1 px-1.5 py-1 rounded text-[10px] font-bold border transition-all cursor-pointer ${styles.timelineStyle === t ? 'border-[#09090b] bg-[#09090b] text-white' : 'border-[#e4e4e7] bg-white text-[#71717a]'}`}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 

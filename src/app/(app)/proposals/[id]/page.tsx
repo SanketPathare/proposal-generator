@@ -4,17 +4,28 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { firestoreHelpers } from '@/lib/firebase/firestore';
-import { Proposal, ProposalSection, ProposalStatus, SectionType, PricingTableData, TemplateStyles } from '@/types';
+import { Proposal, ProposalSection, ProposalStatus, SectionType, PricingTableData, TemplateStyles, TimelineMilestone } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
+import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/Dropdown';
 import { ProposalEditor } from '@/components/editor/ProposalEditor';
 import { SectionManager, SECTION_TYPE_DETAILS } from '@/components/editor/SectionManager';
 import { PricingTable } from '@/components/editor/PricingTable';
 import { Timeline } from '@/components/editor/Timeline';
 import { SaveAsTemplate } from '@/components/editor/SaveAsTemplate';
 import { StylePanel } from '@/components/editor/StylePanel';
-import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel, CURRENCIES, cloneProposal } from '@/lib/utils';
+import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel, CURRENCIES, cloneProposal, formatCurrency, formatDate } from '@/lib/utils';
 import { GOOGLE_FONTS } from '@/lib/templates';
+import {
+  CoverStandard,
+  CoverSplit,
+  CoverCentered,
+  CoverFullBleed,
+  CoverSidebar,
+  CoverDiagonal,
+  SectionCard,
+  SectionTitle,
+} from '@/lib/layout-variants';
 
 const DEFAULT_STYLES: TemplateStyles = {
   fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
@@ -22,6 +33,12 @@ const DEFAULT_STYLES: TemplateStyles = {
   logoPosition: 'left',
   header: '',
   footer: '',
+  coverLayout: 'standard',
+  sectionStyle: 'cards',
+  borderStyle: 'rounded',
+  accentStyle: 'glow',
+  pricingStyle: 'standard',
+  timelineStyle: 'vertical',
 };
 import {
   ArrowLeft,
@@ -40,7 +57,28 @@ import {
   Sparkles,
   Radio,
   Download,
+  Calendar,
+  DollarSign,
+  MoreHorizontal,
+  History as HistoryIcon,
+  ChevronDown,
 } from 'lucide-react';
+
+function renderCover(section: any, proposal: any, styles: TemplateStyles) {
+  const title = section.content?.title || proposal?.title;
+  const subtitle = section.content?.subtitle || proposal?.purpose;
+  const date = formatDate(proposal?.updatedAt || new Date());
+  const props = { title, subtitle, date, styles };
+
+  switch (styles.coverLayout) {
+    case 'split': return <CoverSplit {...props} />;
+    case 'centered': return <CoverCentered {...props} />;
+    case 'full-bleed': return <CoverFullBleed {...props} />;
+    case 'sidebar': return <CoverSidebar {...props} />;
+    case 'diagonal': return <CoverDiagonal {...props} />;
+    default: return <CoverStandard {...props} />;
+  }
+}
 
 function AddSectionFloating({ onAdd }: { onAdd: (type: SectionType) => void }) {
   const [open, setOpen] = useState(false);
@@ -122,6 +160,7 @@ export default function ProposalEditorPage() {
   const [versionModalOpen, setVersionModalOpen] = useState(false);
   const [versions, setVersions] = useState<{ id: string; title: string; sections: ProposalSection[]; pricing: PricingTableData | null; currency: string; createdAt: Date }[]>([]);
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   // Load Google Fonts for selected styles
   useEffect(() => {
@@ -462,8 +501,8 @@ export default function ProposalEditorPage() {
   return (
     <div className="-m-4 sm:-m-6 lg:-m-8 flex flex-col h-[calc(100vh-4.5rem)] bg-[#fcfcfd]">
       {/* Sticky Top Control Toolbar */}
-      <div className="bg-white border-b border-[#e4e4e7] px-4 py-3 flex items-center justify-between gap-3 shrink-0 z-20 print:hidden">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="bg-white border-b border-[#e4e4e7] px-4 py-3 flex flex-wrap items-center justify-between gap-4 shrink-0 z-20 print:hidden">
+        <div className="flex items-center gap-3 shrink-0">
           <Button
             variant="ghost"
             size="sm"
@@ -495,50 +534,82 @@ export default function ProposalEditorPage() {
           />
 
           {/* Status Badge — Draft / Live only */}
-          <select
-            value={status === 'sent' || status === 'viewed' || status === 'live' ? 'live' : 'draft'}
-            onChange={(e) => {
-              const val = e.target.value as ProposalStatus;
-              if (val === 'live') {
-                handleGoLive();
-              } else {
-                setStatus(val);
-                scheduleAutoSave();
-              }
-            }}
-            className={cn(
-              'text-xs font-bold px-3 py-1 rounded-full border-0 cursor-pointer appearance-none outline-none shrink-0',
-              badge.bg
-            )}
-          >
-            <option value="draft">Draft</option>
-            <option value="live">Live</option>
-          </select>
+          <Dropdown
+            trigger={
+              <button
+                className={cn(
+                  'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border border-transparent hover:brightness-95 transition-all cursor-pointer outline-none shrink-0',
+                  badge.bg
+                )}
+              >
+                <span>{status === 'sent' || status === 'viewed' || status === 'live' ? 'Live' : 'Draft'}</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </button>
+            }
+            content={
+              <div className="py-1 min-w-[120px]">
+                <DropdownItem onClick={() => {
+                  setStatus('draft');
+                  scheduleAutoSave();
+                }}>
+                  Draft
+                </DropdownItem>
+                <DropdownItem onClick={() => {
+                  handleGoLive();
+                }}>
+                  Live
+                </DropdownItem>
+              </div>
+            }
+          />
 
           {/* Currency Selector */}
-          <select
-            value={currency}
-            onChange={(e) => handleCurrencyChange(e.target.value)}
-            className="text-xs font-bold px-2.5 py-1 rounded-full border border-[#e4e4e7] bg-white cursor-pointer appearance-none outline-none shrink-0 text-[#09090b]"
-            title="Change currency"
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.value}</option>
-            ))}
-          </select>
+          <Dropdown
+            trigger={
+              <button
+                className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full border border-[#e4e4e7] bg-white hover:bg-[#f4f4f5] transition-colors cursor-pointer outline-none shrink-0 text-[#09090b]"
+                title="Change currency"
+              >
+                <span>{currency}</span>
+                <ChevronDown className="h-3 w-3 text-[#71717a]" />
+              </button>
+            }
+            content={
+              <div className="py-1 min-w-[100px] max-h-[300px] overflow-y-auto">
+                {CURRENCIES.map((c) => (
+                  <DropdownItem key={c.value} onClick={() => handleCurrencyChange(c.value)}>
+                    <span className={currency === c.value ? "font-bold" : ""}>{c.value}</span>
+                  </DropdownItem>
+                ))}
+              </div>
+            }
+          />
 
           {/* Client Selector */}
-          <select
-            value={clientId || ''}
-            onChange={(e) => handleClientChange(e.target.value)}
-            className="text-xs font-medium px-2.5 py-1 rounded-full border border-[#e4e4e7] bg-white cursor-pointer appearance-none outline-none shrink-0 text-[#09090b] max-w-[140px] truncate"
-            title="Assign client"
-          >
-            <option value="">No Client</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <Dropdown
+            trigger={
+              <button
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[#e4e4e7] bg-white hover:bg-[#f4f4f5] transition-colors cursor-pointer outline-none shrink-0 text-[#09090b] max-w-[160px]"
+                title="Assign client"
+              >
+                <span className="truncate">{clientId ? clients.find(c => c.id === clientId)?.name || 'Unknown Client' : 'No Client'}</span>
+                <ChevronDown className="h-3 w-3 text-[#71717a] shrink-0" />
+              </button>
+            }
+            content={
+              <div className="py-1 min-w-[160px] max-h-[300px] overflow-y-auto">
+                <DropdownItem onClick={() => handleClientChange('')}>
+                  <span className={!clientId ? 'font-bold' : ''}>No Client</span>
+                </DropdownItem>
+                {clients.length > 0 && <DropdownSeparator />}
+                {clients.map((c) => (
+                  <DropdownItem key={c.id} onClick={() => handleClientChange(c.id)}>
+                    <span className={clientId === c.id ? 'font-bold' : ''}>{c.name}</span>
+                  </DropdownItem>
+                ))}
+              </div>
+            }
+          />
         </div>
 
         {/* Right Toolbar Actions */}
@@ -588,35 +659,46 @@ export default function ProposalEditorPage() {
           </button>
 
           <Button
-            variant="outline"
+            variant={previewMode ? 'secondary' : 'outline'}
             size="sm"
-            onClick={handleDuplicate}
-            loading={duplicating}
+            onClick={() => setPreviewMode(!previewMode)}
             className="font-semibold text-xs gap-1.5 hidden sm:inline-flex"
-            title="Duplicate proposal"
+            title="Live Preview"
           >
-            <Copy className="h-3.5 w-3.5" />
+            <Eye className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Preview</span>
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLoadVersions}
-            className="font-semibold text-xs gap-1.5 hidden sm:inline-flex"
-            title="Version history"
-          >
-            <span className="text-xs"> History</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportPdf}
-            className="font-semibold text-xs gap-1.5 hidden sm:inline-flex"
-            title="Export as PDF"
-          >
-            <Download className="h-3.5 w-3.5" />
-          </Button>
+          <Dropdown
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-semibold text-xs px-2"
+                title="More options"
+              >
+                <MoreHorizontal className="h-4 w-4 text-[#71717a]" />
+              </Button>
+            }
+            content={
+              <div className="py-1 w-48">
+                <DropdownItem onClick={handleDuplicate}>
+                  <Copy className="h-4 w-4 text-[#71717a]" />
+                  <span>Duplicate Proposal</span>
+                </DropdownItem>
+                <DropdownItem onClick={handleLoadVersions}>
+                  <HistoryIcon className="h-4 w-4 text-[#71717a]" />
+                  <span>Version History</span>
+                </DropdownItem>
+                <DropdownSeparator />
+                <DropdownItem onClick={handleExportPdf}>
+                  <Download className="h-4 w-4 text-[#71717a]" />
+                  <span>Export as PDF</span>
+                </DropdownItem>
+              </div>
+            }
+            align="end"
+          />
 
           {/* Go Live / Share button */}
           {status === 'live' || status === 'sent' || status === 'viewed' ? (
@@ -687,7 +769,7 @@ export default function ProposalEditorPage() {
         </div>
 
         {/* Center Document Canvas */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#fcfcfd]">
+        <div className={cn("flex-1 overflow-y-auto p-4 sm:p-8 bg-[#fcfcfd] print:hidden", previewMode ? "hidden xl:block xl:border-r border-[#e4e4e7]" : "block")}>
           <div className="max-w-4xl mx-auto space-y-6 pb-24">
             {sections.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-3xl border border-[#e4e4e7] p-8">
@@ -781,11 +863,13 @@ export default function ProposalEditorPage() {
                         data={section.content as PricingTableData}
                         onChange={(data) => handleSectionContentChange(section.id, data)}
                         currency={currency}
+                        styles={styles}
                       />
                     ) : section.type === 'timeline' ? (
                       <Timeline
                         milestones={Array.isArray(section.content) ? section.content : []}
                         onChange={(milestones) => handleSectionContentChange(section.id, milestones)}
+                        styles={styles}
                       />
                     ) : (
                       <ProposalEditor
@@ -805,6 +889,205 @@ export default function ProposalEditorPage() {
             </div>
           </div>
         </div>
+
+        {/* Live Preview Panel */}
+        <div className={cn("flex-1 overflow-y-auto p-4 sm:p-8", previewMode ? "block" : "hidden print:block")} style={{ backgroundColor: styles.colors.background }}>
+            <div className="max-w-4xl mx-auto space-y-8 pb-24" style={{ fontFamily: styles.fonts.body, color: styles.colors.text }}>
+              {sections.map((section) => {
+                if (section.type === 'cover') {
+                  return <div key={section.id}>{renderCover(section, proposal, styles)}</div>;
+                }
+
+                if (section.type === 'pricing') {
+                  const pricing = (section.content || proposal?.pricing) as PricingTableData;
+                  if (!pricing || !pricing.rows) return null;
+                  const borderClass = styles.borderStyle === 'sharp' ? 'rounded-none' : styles.borderStyle === 'pill' ? 'rounded-2xl' : 'rounded-3xl';
+                  const headerBg = styles.sectionStyle === 'filled' ? styles.colors.secondary : styles.sectionStyle === 'striped' ? styles.colors.secondary : `${styles.colors.text}08`;
+                  const totalBg = styles.pricingStyle === 'highlight' ? styles.colors.accent : styles.pricingStyle === 'bordered' ? 'transparent' : `${styles.colors.accent}30`;
+                  const totalBorder = styles.pricingStyle === 'bordered' ? `2px solid ${styles.colors.accent}` : 'none';
+
+                  return (
+                    <div key={section.id} className={`${borderClass} p-6 sm:p-8 shadow-xs space-y-5`} style={{ backgroundColor: styles.sectionStyle === 'filled' ? styles.colors.secondary : styles.sectionStyle === 'minimal' ? 'transparent' : 'white', border: styles.sectionStyle === 'minimal' ? 'none' : styles.sectionStyle === 'bordered' ? 'none' : `1px solid ${styles.colors.text}10` }}>
+                      <SectionTitle title={section.title || 'Investment & Pricing'} styles={styles} icon={<DollarSign className="h-4 w-4" />} />
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs" style={{ fontFamily: styles.fonts.body }}>
+                          <thead>
+                            <tr className="font-bold uppercase tracking-wider" style={{ backgroundColor: headerBg, color: styles.colors.text }}>
+                              <th className="py-3 px-4 rounded-l-xl">Deliverable</th>
+                              <th className="py-3 px-4">Description</th>
+                              <th className="py-3 px-4 text-center w-16">Qty</th>
+                              <th className="py-3 px-4 text-right w-28">Rate</th>
+                              <th className="py-3 px-4 text-right w-28 rounded-r-xl">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody style={{ borderTop: `1px solid ${styles.colors.text}10` }}>
+                            {pricing.rows.map((row) => (
+                              <tr key={row.id} style={{ borderBottom: `1px solid ${styles.colors.text}08` }}>
+                                <td className="py-3.5 px-4 font-bold" style={{ color: styles.colors.text }}>{row.item}</td>
+                                <td className="py-3.5 px-4" style={{ color: `${styles.colors.text}80` }}>{row.description}</td>
+                                <td className="py-3.5 px-4 text-center font-medium">{row.quantity}</td>
+                                <td className="py-3.5 px-4 text-right" style={{ color: `${styles.colors.text}80` }}>{formatCurrency(row.unitPrice, pricing.currency)}</td>
+                                <td className="py-3.5 px-4 text-right font-bold" style={{ color: styles.colors.text }}>{formatCurrency(row.total, pricing.currency)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="flex justify-end pt-4" style={{ borderTop: `1px solid ${styles.colors.text}10` }}>
+                        <div className="w-72 space-y-2 text-xs">
+                          <div className="flex justify-between" style={{ color: `${styles.colors.text}80` }}>
+                            <span>Subtotal</span>
+                            <span className="font-bold" style={{ color: styles.colors.text }}>{formatCurrency(pricing.subtotal, pricing.currency)}</span>
+                          </div>
+                          {pricing.discount > 0 && (
+                            <div className="flex justify-between font-semibold text-emerald-600">
+                              <span>Discount Applied</span>
+                              <span>-{formatCurrency(pricing.discount, pricing.currency)}</span>
+                            </div>
+                          )}
+                          {pricing.tax > 0 && (
+                            <div className="flex justify-between" style={{ color: `${styles.colors.text}80` }}>
+                              <span>Taxes & Fees</span>
+                              <span>+{formatCurrency(pricing.tax, pricing.currency)}</span>
+                            </div>
+                          )}
+                          <div className="pt-3 flex justify-between items-baseline" style={{ borderTop: `1px solid ${styles.colors.text}15` }}>
+                            <span className="font-extrabold text-sm" style={{ color: styles.colors.text, fontFamily: styles.fonts.heading }}>Total Investment</span>
+                            <span className="font-extrabold text-lg px-3 py-0.5 rounded-xl" style={{ color: styles.colors.text, backgroundColor: totalBg, border: totalBorder }}>
+                              {formatCurrency(pricing.total, pricing.currency)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (section.type === 'timeline' && Array.isArray(section.content)) {
+                  const milestones = section.content as TimelineMilestone[];
+                  
+                  if (styles.timelineStyle === 'horizontal') {
+                    return (
+                      <SectionCard key={section.id} styles={styles}>
+                        <SectionTitle title={section.title || 'Project Timeline'} styles={styles} icon={<Calendar className="h-4 w-4" />} />
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                          {milestones.map((m, mIdx) => (
+                            <div key={m.id || mIdx} className="shrink-0 w-56 p-4 rounded-2xl border" style={{ borderColor: `${styles.colors.text}10`, backgroundColor: styles.colors.background }}>
+                              <div className="h-6 w-6 rounded-full text-white flex items-center justify-center text-[10px] font-bold mb-2" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
+                                {mIdx + 1}
+                              </div>
+                              <h4 className="text-xs font-bold" style={{ color: styles.colors.text, fontFamily: styles.fonts.heading }}>{m.title}</h4>
+                              {m.description && <p className="text-[11px] mt-1 leading-relaxed" style={{ color: `${styles.colors.text}70` }}>{m.description}</p>}
+                              {m.date && (
+                                <span className="inline-block text-[10px] font-medium mt-2" style={{ color: `${styles.colors.text}50` }}>
+                                  {new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </SectionCard>
+                    );
+                  }
+
+                  if (styles.timelineStyle === 'steps') {
+                    return (
+                      <SectionCard key={section.id} styles={styles}>
+                        <SectionTitle title={section.title || 'Project Timeline'} styles={styles} icon={<Calendar className="h-4 w-4" />} />
+                        <div className="flex gap-3">
+                          {milestones.map((m, mIdx) => (
+                            <div key={m.id || mIdx} className="flex-1 text-center">
+                              <div className="h-8 w-8 rounded-full text-white flex items-center justify-center text-xs font-bold mx-auto mb-2" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
+                                {mIdx + 1}
+                              </div>
+                              <div className="h-1 w-full mb-2" style={{ backgroundColor: mIdx < milestones.length - 1 ? `${styles.colors.accent}40` : styles.colors.accent }} />
+                              <h4 className="text-xs font-bold" style={{ color: styles.colors.text, fontFamily: styles.fonts.heading }}>{m.title}</h4>
+                              {m.description && <p className="text-[10px] mt-1" style={{ color: `${styles.colors.text}60` }}>{m.description}</p>}
+                              {m.date && (
+                                <span className="text-[10px] font-medium mt-1 block" style={{ color: `${styles.colors.text}50` }}>
+                                  {new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </SectionCard>
+                    );
+                  }
+
+                  if (styles.timelineStyle === 'cards') {
+                    return (
+                      <SectionCard key={section.id} styles={styles}>
+                        <SectionTitle title={section.title || 'Project Timeline'} styles={styles} icon={<Calendar className="h-4 w-4" />} />
+                        <div className="grid grid-cols-2 gap-3">
+                          {milestones.map((m, mIdx) => (
+                            <div key={m.id || mIdx} className="p-4 rounded-2xl border" style={{ borderColor: `${styles.colors.text}10`, backgroundColor: styles.colors.background }}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="h-5 w-5 rounded-full text-white flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
+                                  {mIdx + 1}
+                                </div>
+                                <h4 className="text-xs font-bold" style={{ color: styles.colors.text, fontFamily: styles.fonts.heading }}>{m.title}</h4>
+                              </div>
+                              {m.description && <p className="text-[11px] leading-relaxed" style={{ color: `${styles.colors.text}70` }}>{m.description}</p>}
+                              {m.date && (
+                                <span className="text-[10px] font-medium mt-2 block" style={{ color: `${styles.colors.text}50` }}>
+                                  {new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </SectionCard>
+                    );
+                  }
+
+                  return (
+                    <SectionCard key={section.id} styles={styles}>
+                      <SectionTitle title={section.title || 'Project Timeline'} styles={styles} icon={<Calendar className="h-4 w-4" />} />
+                      <div className="relative pl-6 space-y-5">
+                        <div className="absolute left-2.5 top-2 bottom-2 w-0.5" style={{ backgroundColor: `${styles.colors.text}15` }} />
+                        {milestones.map((m, mIdx) => (
+                          <div key={m.id || mIdx} className="relative">
+                            <div className="absolute -left-6 top-0.5 h-5 w-5 rounded-full text-white flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
+                              {mIdx + 1}
+                            </div>
+                            <div className="p-4 rounded-2xl space-y-1" style={{ backgroundColor: styles.colors.background, border: `1px solid ${styles.colors.text}10` }}>
+                              <h4 className="text-sm font-bold" style={{ color: styles.colors.text, fontFamily: styles.fonts.heading }}>{m.title}</h4>
+                              {m.description && <p className="text-xs leading-relaxed" style={{ color: `${styles.colors.text}70` }}>{m.description}</p>}
+                              {m.date && (
+                                <span className="text-[11px] font-medium pt-1 block" style={{ color: `${styles.colors.text}50` }}>
+                                  Target Date: {new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </SectionCard>
+                  );
+                }
+
+                let htmlContent = '';
+                if (typeof section.content === 'string') {
+                  htmlContent = section.content;
+                } else if (section.content?.html) {
+                  htmlContent = section.content.html;
+                }
+                if (!htmlContent) return null;
+
+                return (
+                  <SectionCard key={section.id} styles={styles}>
+                    <SectionTitle title={section.title} styles={styles} />
+                    <div
+                      className="prose prose-neutral max-w-none text-sm leading-relaxed"
+                      style={{ color: styles.colors.text, fontFamily: styles.fonts.body }}
+                      dangerouslySetInnerHTML={{ __html: htmlContent }}
+                    />
+                  </SectionCard>
+                );
+              })}
+            </div>
+          </div>
       </div>
 
       {/* Style Panel (Design Customization) */}
