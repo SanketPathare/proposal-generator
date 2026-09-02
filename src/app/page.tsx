@@ -2,6 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth as getAuth } from '@/lib/firebase/client';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar } from '@/components/ui/Avatar';
+import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/Dropdown';
 import {
   Sparkles,
   ArrowRight,
@@ -17,12 +23,29 @@ import {
   ChevronRight,
   Star,
   Check,
+  User,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export default function LandingPage() {
+  const { user, profile, branding } = useAuth();
+  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [activeTab, setActiveTab] = useState<'ai' | 'templates' | 'manual'>('ai');
+
+  const handleSignOut = async () => {
+    try {
+      const authInstance = getAuth();
+      if (authInstance) {
+        await signOut(authInstance);
+      }
+    } catch (e) {
+      console.warn('Sign out error:', e);
+    }
+    router.push('/login');
+  };
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] text-[#09090b] selection:bg-[#d4ff00] selection:text-black">
@@ -59,15 +82,79 @@ export default function LandingPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-              <Link href="/login" className="text-sm font-semibold text-[#52525b] hover:text-[#09090b] px-3 py-2 transition-colors">
-                Sign In
-              </Link>
-              <Link href="/signup">
-                <Button variant="accent" size="sm" className="font-bold">
-                  Get Started Free
-                  <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/dashboard" className="hidden sm:block">
+                    <Button variant="accent" size="sm" className="font-bold">
+                      Go to Dashboard
+                      <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </Link>
+
+                  <Dropdown
+                    trigger={
+                      <button
+                        className="flex items-center gap-2.5 p-1 pl-1.5 pr-2.5 rounded-full hover:bg-[#f4f4f5] transition-colors border border-transparent hover:border-[#e4e4e7] cursor-pointer"
+                        aria-label="User menu"
+                      >
+                        <Avatar
+                          src={profile?.profileImageUrl || branding?.logoUrl}
+                          fallback={profile?.fullName || branding?.brandName || user?.email || 'User'}
+                          size="sm"
+                        />
+                        <div className="hidden md:flex flex-col text-left">
+                          <span className="text-xs font-bold text-[#09090b] leading-tight truncate max-w-[120px]">
+                            {profile?.fullName || branding?.brandName || (user?.email ? user.email.split('@')[0] : 'Creator')}
+                          </span>
+                          <span className="text-[10px] text-[#71717a] leading-tight">Pro Account</span>
+                        </div>
+                      </button>
+                    }
+                    content={
+                      <div className="py-1">
+                        <div className="px-3 py-2 border-b border-[#f4f4f5] mb-1">
+                          <p className="text-xs font-bold text-[#09090b] truncate">{profile?.fullName || user?.email || 'Creator'}</p>
+                          <p className="text-[11px] text-[#71717a] truncate">{user?.email || 'Logged in'}</p>
+                        </div>
+                        <DropdownItem href="/dashboard">
+                          <Layers className="h-4 w-4 text-[#71717a]" />
+                          <span>Dashboard</span>
+                        </DropdownItem>
+                        <DropdownItem href="/settings/profile">
+                          <User className="h-4 w-4 text-[#71717a]" />
+                          <span>Profile Settings</span>
+                        </DropdownItem>
+                        <DropdownItem href="/settings/branding">
+                          <Sparkles className="h-4 w-4 text-[#71717a]" />
+                          <span>Branding & Logo</span>
+                        </DropdownItem>
+                        <DropdownItem href="/settings/proposal">
+                          <Settings className="h-4 w-4 text-[#71717a]" />
+                          <span>Proposal Defaults</span>
+                        </DropdownItem>
+                        <DropdownSeparator />
+                        <DropdownItem onClick={handleSignOut} className="text-red-600 hover:bg-red-50 hover:text-red-700">
+                          <LogOut className="h-4 w-4 text-red-600" />
+                          <span>Sign Out</span>
+                        </DropdownItem>
+                      </div>
+                    }
+                    align="end"
+                  />
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm font-semibold text-[#52525b] hover:text-[#09090b] px-3 py-2 transition-colors">
+                    Sign In
+                  </Link>
+                  <Link href="/signup">
+                    <Button variant="accent" size="sm" className="font-bold">
+                      Get Started Free
+                      <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -100,17 +187,28 @@ export default function LandingPage() {
 
               {/* Action Buttons */}
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link href="/signup" className="w-full sm:w-auto">
-                  <Button variant="accent" size="lg" className="w-full sm:w-auto text-base font-bold shadow-md hover:scale-[1.02]">
-                    Start Building Free — No Card Needed
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
-                <Link href="/dashboard" className="w-full sm:w-auto">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto text-base font-medium">
-                    Try Live Demo
-                  </Button>
-                </Link>
+                {user ? (
+                  <Link href="/dashboard" className="w-full sm:w-auto">
+                    <Button variant="accent" size="lg" className="w-full sm:w-auto text-base font-bold shadow-md hover:scale-[1.02]">
+                      Go to Dashboard
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/signup" className="w-full sm:w-auto">
+                      <Button variant="accent" size="lg" className="w-full sm:w-auto text-base font-bold shadow-md hover:scale-[1.02]">
+                        Start Building Free — No Card Needed
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard" className="w-full sm:w-auto">
+                      <Button variant="outline" size="lg" className="w-full sm:w-auto text-base font-medium">
+                        Try Live Demo
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
 
               {/* Small micro points */}

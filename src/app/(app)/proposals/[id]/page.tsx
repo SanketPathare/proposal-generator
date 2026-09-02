@@ -13,7 +13,6 @@ import { SectionManager, SECTION_TYPE_DETAILS } from '@/components/editor/Sectio
 import { PricingTable } from '@/components/editor/PricingTable';
 import { Timeline } from '@/components/editor/Timeline';
 import { SaveAsTemplate } from '@/components/editor/SaveAsTemplate';
-import { StylePanel } from '@/components/editor/StylePanel';
 import { cn, generateId, generateShareId, getStatusBadgeStyle, getStatusLabel, CURRENCIES, cloneProposal, formatCurrency, formatDate } from '@/lib/utils';
 import { GOOGLE_FONTS } from '@/lib/templates';
 import {
@@ -641,23 +640,6 @@ export default function ProposalEditorPage() {
             <span>Template</span>
           </Button>
 
-          {/* Customize Design button — opens StylePanel */}
-          <button
-            onClick={() => {
-              const event = new CustomEvent('toggle-style-panel');
-              window.dispatchEvent(event);
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-full border border-[#e4e4e7] bg-white hover:bg-[#f4f4f5] transition-colors cursor-pointer"
-            title="Customize Design"
-          >
-            <div className="flex -space-x-1">
-              <div className="w-2.5 h-2.5 rounded-full border border-white" style={{ backgroundColor: styles.colors.primary }} />
-              <div className="w-2.5 h-2.5 rounded-full border border-white" style={{ backgroundColor: styles.colors.accent }} />
-              <div className="w-2.5 h-2.5 rounded-full border border-white" style={{ backgroundColor: styles.colors.secondary }} />
-            </div>
-            <span className="hidden sm:inline">Design</span>
-          </button>
-
           <Button
             variant={previewMode ? 'secondary' : 'outline'}
             size="sm"
@@ -1089,9 +1071,6 @@ export default function ProposalEditorPage() {
             </div>
           </div>
       </div>
-
-      {/* Style Panel (Design Customization) */}
-      <StylePanel styles={styles} onChange={setStyles} />
 
       {/* Share Modal Dialog */}
       {shareModalOpen && (

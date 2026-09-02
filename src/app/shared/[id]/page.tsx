@@ -230,22 +230,22 @@ export default function SharedProposalPage() {
 
   return (
     <div className="min-h-screen text-[#09090b] selection:text-black" style={{ backgroundColor: styles.colors.background, fontFamily: styles.fonts.body, color: styles.colors.text, [`--tw-ring-color` as any]: styles.colors.accent }}>
-      <header className="sticky top-0 z-40 border-b print:hidden" style={{ backgroundColor: `${styles.colors.background}e6`, backdropFilter: 'blur(12px)', borderColor: `${styles.colors.text}10` }}>
+      <header className="sticky top-0 z-40 border-b print:hidden bg-white/95 backdrop-blur-md border-[#e4e4e7]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl flex items-center justify-center shadow-xs" style={{ backgroundColor: styles.colors.primary, color: styles.colors.accent }}>
+            <div className="h-8 w-8 rounded-xl flex items-center justify-center shadow-xs bg-[#09090b] text-white">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <span className="font-extrabold text-sm tracking-tight" style={{ color: styles.colors.text, fontFamily: styles.fonts.heading }}>Proposal Preview</span>
-              <span className="text-[10px] block" style={{ color: `${styles.colors.text}60` }}>Live &amp; accepting requests</span>
+              <span className="font-extrabold text-sm tracking-tight text-[#09090b]">Proposal Preview</span>
+              <span className="text-[10px] block text-[#71717a]">Live &amp; accepting requests</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleDownloadPDF()} className="text-xs font-semibold hidden sm:inline-flex">
+            <Button variant="outline" size="sm" onClick={() => handleDownloadPDF()} className="text-xs font-semibold hidden sm:inline-flex text-[#09090b]">
               <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()} className="text-xs font-semibold hidden sm:inline-flex">
+            <Button variant="outline" size="sm" onClick={() => window.print()} className="text-xs font-semibold hidden sm:inline-flex text-[#09090b]">
               <Printer className="h-3.5 w-3.5 mr-1" /> Print
             </Button>
             {status === 'rejected' ? (
@@ -253,14 +253,14 @@ export default function SharedProposalPage() {
                 <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-sm">
                   <XCircle className="h-4 w-4" /> Declined
                 </span>
-                <Button variant="accent" size="sm" onClick={() => setAcceptModalOpen(true)} className="text-xs font-bold shadow-sm" style={{ color: styles.colors.primary }}>
+                <Button variant="accent" size="sm" onClick={() => setAcceptModalOpen(true)} className="text-xs font-bold shadow-sm">
                   <Check className="h-3.5 w-3.5 mr-1 stroke-[3]" /> Send Request
                 </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={handleDecline} className="text-xs font-semibold text-rose-600 hover:bg-rose-50">Decline</Button>
-                <Button variant="accent" size="sm" onClick={() => setAcceptModalOpen(true)} className="text-xs font-bold shadow-sm" style={{ color: styles.colors.primary }}>
+                <Button variant="accent" size="sm" onClick={() => setAcceptModalOpen(true)} className="text-xs font-bold shadow-sm">
                   <Check className="h-3.5 w-3.5 mr-1 stroke-[3]" /> Send Request
                 </Button>
               </div>
@@ -480,17 +480,17 @@ export default function SharedProposalPage() {
           )}
 
           {status !== 'rejected' && (
-            <div className="p-8 text-white rounded-3xl text-center space-y-4 shadow-xl print:hidden" data-html2canvas-ignore="true" style={{ backgroundColor: styles.colors.primary }}>
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: styles.colors.accent }}>
+            <div className="p-8 rounded-3xl text-center space-y-4 shadow-xl print:hidden bg-[#09090b] text-white" data-html2canvas-ignore="true">
+              <span className="text-xs font-bold uppercase tracking-widest text-white/50">
                 Interested in this proposal?
               </span>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-white" style={{ fontFamily: styles.fonts.heading }}>
                 Send an Accept Request
               </h3>
-              <p className="text-xs max-w-md mx-auto" style={{ color: `${styles.colors.accent}99` }}>
+              <p className="text-xs max-w-md mx-auto text-white/70">
                 Fill in your details and send an accept request to the proposal creator.
               </p>
-              <Button variant="accent" size="lg" onClick={() => setAcceptModalOpen(true)} className="font-bold shadow-md hover:scale-105" style={{ color: styles.colors.primary }}>
+              <Button variant="accent" size="lg" onClick={() => setAcceptModalOpen(true)} className="font-bold shadow-md hover:scale-105">
                 <Check className="h-4 w-4 mr-2 stroke-[3]" /> Send Accept Request
               </Button>
             </div>
